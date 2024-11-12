@@ -1,0 +1,164 @@
+% ----------------------------- Design ---------------------------------------
+
+\section{Design}
+
+\subsection{Technical Environment}
+% Mention minimum hardware configuration, software tools and package details.
+\noindent
+The technical environment for the project "Analyzing Social Media Posts for Mental Health Disorder Detection" comprises a combination of hardware, software, and tools that enable smooth data analysis, machine learning model training, and deployment. Below is a detailed overview of the minimum hardware configuration, software tools, and package details necessary to carry out this project effectively. \\
+
+\noindent
+\textbf{Minimum Hardware Configuration} \\
+\noindent
+Given the nature of the project, which involves processing textual data and training machine learning models, the hardware requirements are modest but significant enough to ensure optimal performance. The minimum configuration needed is:
+\begin{itemize}
+    \item \textbf{Processor} :
+    \noindent
+    Intel Core i5 (or equivalent) with a base clock speed of at least 2.5 GHz. A multi-core processor is preferred as it helps in parallel processing, which is essential during model training and data preprocessing steps.
+    \item \textbf{RAM} :
+    \noindent
+    8 GB of RAM is recommended to handle the operations of data loading, cleaning, and transformation. Large datasets, like those used in this project, may require more memory to prevent memory overflow errors and reduce delays during processing. For larger datasets, 16 GB of RAM would be ideal.
+    \item \textbf{Storage} :
+    \noindent
+    At least 256 GB of SSD storage is recommended. Faster storage access significantly impacts loading time for datasets and dependencies. SSD is preferred over traditional HDD because of its faster read/write speeds, which benefit large datasets like the Reddit-based social media posts used in this project.
+    \item \textbf{Graphics Processing Unit (GPU)} :
+    \noindent
+    For basic machine learning tasks like Logistic Regression or SVM, a dedicated GPU is not necessary. However, if deep learning models or more complex neural networks were introduced later, a GPU like NVIDIA GTX 1060 with 4 GB VRAM or higher would be advantageous.
+    \item \textbf{Operating System} :
+    \noindent
+    Windows 10 (64-bit) or higher, macOS 10.13 (High Sierra) or higher, or any stable Linux distribution (e.g., Ubuntu 18.04 or higher). The operating system should support all necessary machine learning libraries and be compatible with the tools required for the project.
+\end{itemize} 
+
+\noindent
+\textbf{Software Tools and Packages} \\
+\noindent
+For the software stack, the project leverages a set of well-established tools, platforms, and programming libraries to ensure smooth execution from data preprocessing to model deployment:
+\begin{itemize}
+    \item \textbf{Python} :
+    \noindent
+    The primary programming language used for data processing, model training, and evaluation. Python is chosen due to its rich ecosystem of libraries and frameworks tailored for machine learning and data science.
+    
+    \item \textbf{Pandas} :
+    \noindent
+    A powerful library for data manipulation and analysis, essential for data preprocessing tasks, such as handling missing values and restructuring datasets.
+    
+    \item \textbf{scikit-learn} :
+    \noindent
+    A comprehensive machine learning library in Python used for implementing and comparing algorithms in classification, regression, and clustering, along with various model evaluation tools.
+    
+    \item \textbf{Streamlit} :
+    \noindent
+    An open-source Python framework that facilitates the deployment of machine learning models and interactive web applications.
+    
+    \item \textbf{Pyngrok} :
+    \noindent
+    A Python wrapper for ngrok, used to create secure tunnels to locally deployed applications, which is particularly useful for sharing Streamlit applications over the web.
+    
+    \item \textbf{Google Colab} :
+    \noindent
+    A cloud-based platform used for writing, executing, and sharing Python code, with access to GPU and TPU resources, beneficial for model training. It integrates seamlessly with libraries like TensorFlow and PyTorch.
+    
+    \item \textbf{PRAW (Python Reddit API Wrapper)} :
+    \noindent
+    A Python library that allows for easy interaction with the Reddit API to access, retrieve, and analyze Reddit data, such as posts, comments, and user information.
+
+    \item \textbf{pytesseract} :
+    \noindent
+    A Python wrapper for Tesseract OCR, used to extract text from images. It's essential for converting image-based text data into a format suitable for processing.
+    
+    \item \textbf{Pillow} :
+    \noindent
+    A Python Imaging Library that adds support for image processing, which aids in handling image files for text recognition tasks with pytesseract.
+
+    \item \textbf{joblib} :
+    \noindent
+    A library for efficient serialization and deserialization of Python objects, especially useful for saving and loading machine learning models during deployment.
+    
+    \item \textbf{protobuf} :
+    \noindent
+    A protocol buffer library by Google used for serializing structured data, helpful in efficient data exchange between applications.
+    
+    \item \textbf{deep-translator} :
+    \noindent
+    A library that facilitates easy translation across different languages, enabling multilingual processing of text data.
+    
+    \item \textbf{Requests} :
+    \noindent
+    A user-friendly library for making HTTP requests, used to retrieve data from APIs or web resources as part of data collection.
+    
+    \item \textbf{google-generativeai} :
+    \noindent
+    A Python client library for Google’s generative AI models, providing tools to integrate and utilize AI functionalities within the project.
+    
+\end{itemize}
+
+
+\subsection{Hierarchy of Modules}
+% Provide a diagram.
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.6\textwidth]{Images/Project Modules.png}  
+    \caption{Project Modules}
+    \label{Project Modules}  % Label for referencing the figure
+\end{figure}
+
+\noindent
+In this project, the system is structured into key modules to classify mental health issues based on text input effectively. The \textbf{Data Collection Module} gathers relevant text data, building a comprehensive dataset from sources like CSV files or platforms such as Reddit via PRAW. Next, the \textbf{Data Preprocessing Module} loads and cleans this data through tokenization, stop-word removal, and lemmatization, preparing it for analysis. Following this, the \textbf{Model Training and Validation Module} converts the text into numerical features using techniques like TF-IDF, splitting the data into training and validation sets to test various machine learning models, including Logistic Regression, Naive Bayes, SVM, Random Forest, XGboost and LSTM. Finally, the \textbf{Testing and Deployment Module} allows real-time predictions by deploying the model on platforms like Streamlit Cloud, providing an accessible solution for practical applications.
+
+\subsection{Detailed Design}
+% Provide hierarchy of modules or overall system diagram. 
+% \vspace{.1in}
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.6\textwidth]{Images/System Overview.png}  
+    \caption{System Overview}
+    \label{System Overview}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.95\textwidth]{Images/ML Model Workflow.png}  
+    \caption{Model Workflow}
+    \label{Model Workflow}  % Label for referencing the figure
+\end{figure}
+
+% \noindent
+% For Detailed Design, use flowcharts, DFD, UML or ER diagrams as applicable. Titles of s7.2.1, 7.2.2 etc. should be with the name of respective design modules. Your focus should be on: “How the requirement will be implemented in the system?” Design Reference subsection numbers should be matching as stated in Requirement Matrix.
+\vspace{.1in}
+
+\subsubsection{Data Loading and Preprocessing}
+\noindent
+The Data Loading and Preprocessing Module is the foundation of the system, responsible for ingesting and preparing the text data for analysis. This module begins by loading the dataset from the preprocessed\_mental\_health\_text.csv file, which contains various mental health-related text entries. Once the data is loaded, a series of preprocessing steps are conducted to ensure the text is clean and ready for feature extraction. This includes tokenization, where the text is split into individual words or tokens, and lowercasing to maintain uniformity across the dataset. Additionally, stop-word removal is performed to eliminate common words that do not contribute to the meaning, such as "and," "the," and "is." Finally, lemmatization or stemming is applied to reduce words to their base or root forms. These preprocessing techniques are crucial as they help improve the quality of the input data, ultimately leading to better model performance.
+
+\subsubsection{Feature Extraction}
+\noindent
+In the Feature Extraction Module, the preprocessed text data is transformed into a numerical format that machine learning algorithms can process. This module allows for the selection between two primary feature extraction methods: Term Frequency-Inverse Document Frequency (TF-IDF). The TF-IDF approach evaluates the importance of words in the dataset by considering their frequency in individual documents relative to their overall occurrence across all documents. This helps in highlighting the most informative words. By converting text into numerical features, this module prepares the data for the subsequent training and validation stages, ensuring that the classification models can effectively interpret the input.
+
+\subsubsection{Model Training and Validation}
+\noindent
+The Model Training and Validation Module is critical to developing a robust classification system. In this module, the dataset is split into training and testing sets to evaluate the performance of the models accurately. Various classification algorithms are employed, including Logistic Regression, Naive Bayes, Support Vector Machines, Random Forest, XGboost and LSTM. Each model is trained on the training set, which involves adjusting the model parameters based on the input features and their corresponding labels. Following training, the models undergo validation to assess their performance using various metrics such as accuracy, precision, recall, and F1-score. A decision point is included to determine if the achieved accuracy meets the project requirements. If the accuracy is deemed acceptable, the model is accepted. 
+
+\subsubsection{Prediction}
+\noindent
+The Prediction Module is designed to provide real-time classification of new input text related to mental health issues. Upon receiving user input, this module initiates a preprocessing workflow that mirrors the steps applied during the training phase, including tokenization, lowercasing, stop-word removal, and lemmatization or stemming. Once the input text is preprocessed, it is fed into the trained classification models to generate predictions. Each model may provide a classification result, allowing for a comprehensive analysis of the input. This module not only delivers the predicted mental health issue but also ensures that users receive an informative output that reflects the confidence level of each prediction, enabling them to understand the model's reasoning. The seamless integration of this module into the overall system enhances the user experience by providing instant and relevant feedback.
+
+\subsubsection{Testing and Deployment}
+\noindent
+The module focuses on making the trained models accessible for real-time predictions. Once the models have been validated and selected based on their performance, this module prepares them for deployment on suitable platforms like Streamlit Cloud. This involves packaging the models and creating a user interface where users can input text and receive predictions. The deployment process also includes considerations for scaling, ensuring that the system can handle multiple requests simultaneously while maintaining responsiveness. By providing a free and efficient deployment solution, this module enables users to access the mental health classification service easily. The deployment of the models ensures that the insights generated from the analysis can be utilized effectively in real-world applications.
+
+% \noindent
+% Create separate sections for separate modules of design as in Requirement Matrix. Ensure to provide Design Diagrams \textit{(e.g. System overview / DFDs / ERDs etc.; cross-reference to be drawn from Chapter 6), Decision matrix (for algorithm recommendation etc.) }
+
+
+
+
+% \subsubsection{Name of Design Module 1 \label{sec:design_mod1}}
+% \subsubsection{Name of Design Module 2 \label{sec:design_mod2}}
+% \subsubsection{Name of Design Module 3 etc \label{sec:design_mod3}}
+
+
+% Refer APPENDIX A  – Prototypes \ref{sec:proto} for prototype details.
+
+
+% ------------------------------ Design Ends ---------------------------------
+

@@ -1,0 +1,610 @@
+% --------------------------- Implementation ---------------------------------
+
+\section{Implementation}
+\subsection{Features From RM}
+\noindent
+For the initial prototype development, a subset of the requirements from the Requirement Matrix (RM) was carefully selected to focus on implementing core functionalities and demonstrating proof of concept. The selection was based on a combination of high-priority functional requirements that form the backbone of the system, ensuring that critical features are built and validated before expanding the scope.
+
+The requirements chosen for the prototype primarily involve data preprocessing, model training, and evaluation processes. These requirements were selected because they are fundamental to the project's success, ensuring that the data pipeline and model implementation work seamlessly together. This subset of features lays the groundwork for later integration with additional components and more complex functionality.
+
+The filtered part of the RM focuses on the following high-priority requirements: data cleaning and feature extraction, training of machine learning models, and evaluation of model performance using standard metrics. These requirements were identified as crucial because they directly impact the system's ability to handle data, learn patterns, and provide meaningful outputs. Without successfully implementing these core features, the overall effectiveness of the solution would be significantly reduced.
+
+Furthermore, these selected features align with the project’s goals and provide a clear pathway for incremental development. By narrowing down the requirements to these foundational aspects, the development team can ensure that the prototype is not only functional but also extensible, providing a robust framework for future enhancements.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.85\textwidth]{Images/RM_part_for_implementation.png}  
+    \caption{Features from Requirement Matrix}
+    \label{Features from Requirement Matrix}  % Label for referencing the figure
+\end{figure}
+
+\subsection{Code Details and Output}
+
+\subsubsection{Data Collection}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Collecting Reddit Posts]
+    \begin{lstlisting}[language=Python]
+    import praw
+    import pandas as pd
+    import time
+    
+    # Initialize Reddit API
+    reddit = praw.Reddit(client_id='YOUR_CLIENT_ID',
+                         client_secret='YOUR_CLIENT_SECRET',
+                         user_agent='Mental Health Classifier')
+    
+    # Define subreddits and post types
+    subreddits = {'normal': ['news', 'AskReddit'], 
+                  'depression': ['depression'], 
+                  'ptsd': ['PTSD'], 
+                  'anxiety': ['Anxiety'], 
+                  'bipolar': ['BipolarReddit']}
+    post_types = ['hot', 'new', 'top']
+    posts_per_type = 100
+    
+    # Collect and save posts
+    data = []
+    for label, subs in subreddits.items():
+        for sub in subs:
+            for post_type in post_types:
+                posts = getattr(reddit.subreddit(sub), post_type)(limit=posts_per_type)
+                for post in posts:
+                    data.append([post.title + " " + post.selftext, label])
+                time.sleep(1)
+    
+    df = pd.DataFrame(data, columns=['text', 'label'])
+    df.to_csv(f'{label}_dataset.csv', index=False)
+    \end{lstlisting}
+    \end{tcolorbox}
+    
+    \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Combining Collected Datasets]
+    \begin{lstlisting}[language=Python]
+    import pandas as pd
+    from sklearn.utils import shuffle
+    
+    # Load datasets
+    bipolar_df = pd.read_csv("bipolar_dataset.csv")
+    depression_df = pd.read_csv("depression_dataset.csv")
+    normal_df = pd.read_csv("normal_dataset.csv")
+    anxiety_df = pd.read_csv("anxiety_dataset.csv")
+    ptsd_df = pd.read_csv("ptsd_dataset.csv")
+    
+    # Minimum length for balanced classes
+    min_length = min(len(bipolar_df), len(depression_df), len(normal_df) // 6, len(anxiety_df), len(ptsd_df))
+    
+    # Create balanced pattern
+    pattern_data = []
+    for i in range(min_length):
+        pattern_data.extend([bipolar_df.iloc[i], depression_df.iloc[i]] +
+                            normal_df.iloc[i*6:(i+1)*6].to_dict('records') +
+                            [anxiety_df.iloc[i], ptsd_df.iloc[i]])
+    
+    pattern_df = pd.DataFrame(pattern_data)
+    remaining_data = shuffle(pd.concat([bipolar_df[min_length:], depression_df[min_length:], 
+                                        normal_df[min_length*6:], anxiety_df[min_length:], ptsd_df[min_length:]]))
+    
+    final_df = pd.concat([pattern_df, remaining_data]).reset_index(drop=True)
+    final_df.to_csv("mental_health_combined.csv", index=False)
+    \end{lstlisting}
+    \end{tcolorbox}
+    
+    \noindent
+    The first code snippet collects Reddit posts by connecting to specific subreddits associated with various mental health topics. Using the Reddit API, posts are retrieved from `hot`, `new`, and `top` categories for each mental health type, including general subreddits (for the "normal" category). Each post’s title and content are combined, labeled, and saved into separate CSV files. The second code snippet merges these CSV files to form a combined dataset. It creates a balanced sample by selecting the minimum number of rows across each category and organizes the data in a structured pattern. Remaining rows are shuffled and appended, producing a final dataset suitable for machine learning applications in mental health classification.
+    
+
+    \subsubsection{Data Preprocessing}
+
+    \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Text Preprocessing]
+        \begin{lstlisting}[language=Python]
+        import pandas as pd
+        import re
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from nltk.corpus import stopwords
+        from nltk.tokenize import word_tokenize
+        import nltk
+    
+        # Download stopwords (if you haven't already)
+        nltk.download('stopwords')
+        nltk.download('punkt')
+    
+        # Load the dataset
+        df = pd.read_csv('mental_health.csv')
+    
+        # 1. Handling Missing Values
+        df.dropna(subset=['text'], inplace=True)
+    
+        # 2. Removing duplicates (if any)
+        df.drop_duplicates(subset=['text'], inplace=True)
+    
+        # 3. Text Preprocessing
+        negative_words = {"not", "no", "nor", "never", "nothing", "nowhere", "neither", "cannot", "n't", "without", "barely", "hardly", "scarcely"}
+    
+        def clean_text(text):
+            text = re.sub(r'http\S+', '', text)  # Remove URLs
+            text = re.sub(r'@\w+', '', text)  # Remove mentions (@username)
+            text = re.sub(r'[^a-zA-Z\s]', '', text)  # Remove special characters, numbers, and punctuations
+            text = text.lower()  # Convert text to lowercase
+            tokens = word_tokenize(text)  # Tokenize the text
+            tokens = [word for word in tokens if word not in stopwords.words('english') or word in negative_words]  # Remove stopwords, but keep negative words
+            clean_text = ' '.join(tokens)  # Join the tokens back into a single string
+            return clean_text
+    
+        df['cleaned_text'] = df['text'].apply(clean_text)  # Apply the cleaning function to the 'text' column
+    
+    \end{lstlisting}
+    \end{tcolorbox}
+
+    \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Text Preprocessing]
+    \begin{lstlisting}[language=Python]
+        # 4. Feature Extraction using TF-IDF Vectorization
+        vectorizer = TfidfVectorizer(max_features=10000)  # Adjust the max_features
+        X = vectorizer.fit_transform(df['cleaned_text'])  # Fit and transform the cleaned text data
+        X_df = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())  # Convert the result to a DataFrame for easier understanding
+    
+        # Save the preprocessed dataset (optional)
+        df.to_csv('preprocessed_mental_health.csv', index=False)
+        \end{lstlisting}
+    \end{tcolorbox}
+    
+    \noindent
+    The code snippet above demonstrates the preprocessing steps for a mental health dataset. It handles missing values and duplicates in the text data, performs text cleaning by removing URLs, mentions, and special characters, and applies tokenization. The cleaned text is then vectorized using TF-IDF to convert the textual data into a format suitable for machine learning models. Finally, the preprocessed dataset is saved as a new CSV file for future use in classification tasks.
+    
+    \begin{figure}[h!]  
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/Data Cleaning and Preprocessing.png}  
+        \caption{Data Collection and Preprocessing}
+        \label{Data Collection and Preprocessing}  % Label for referencing the figure
+    \end{figure}
+
+\subsubsection{Logistic Regression Model for Classification}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Logistic Regression for Mental Health Classification]
+    \begin{lstlisting}[language=Python]
+    import pandas as pd
+    from sklearn.model_selection import train_test_split
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+    # Load the preprocessed dataset
+    dataset = pd.read_csv('preprocessed_mental_health.csv')
+
+    # Check if 'cleaned_text' and 'mental_health_issue' columns exist
+    if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+        raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+
+    # Remove rows with missing values in 'cleaned_text' column
+    dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+    # Initialize the CountVectorizer and fit/transform the cleaned text
+    LRvectorizer = CountVectorizer()
+    X = LRvectorizer.fit_transform(dataset['cleaned_text'])
+
+    # Prepare the target variable
+    y = dataset['mental_health_issue']
+
+    # Split the dataset into Training and Test Sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Initialize the Logistic Regression model
+    LRmodel = LogisticRegression(multi_class='ovr', max_iter=10000)
+
+    # Train the model
+    LRmodel.fit(X_train, y_train)
+
+    # Make predictions on the test set
+    y_pred = LRmodel.predict(X_test)
+
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Logistic Regression for Mental Health Classification]
+    \begin{lstlisting}[language=Python]
+    # Evaluate the model
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'Accuracy: {accuracy * 100:.2f}%')
+
+    # Print classification report
+    print("Classification Report:\n", classification_report(y_test, y_pred))
+
+    # Print confusion matrix
+    print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The provided code demonstrates how to apply Logistic Regression for mental health classification using a preprocessed dataset. First, the dataset is loaded, and a check is performed to ensure that it contains the necessary columns, specifically \texttt{cleaned\_text} and \texttt{mental\_health\_issue}. If these columns are missing, an error is raised. The dataset is then cleaned by removing rows that have missing values in the \texttt{cleaned\_text} column using the \texttt{dropna()} function. Next, the \texttt{CountVectorizer} is initialized and applied to the \texttt{cleaned\_text} column to convert the text data into a numerical format suitable for machine learning. This is accomplished by transforming the text into a document-term matrix where each row represents a document (post) and each column represents a unique term (word). The target variable, \texttt{mental\_health\_issue}, is also extracted from the dataset.The dataset is then split into training and testing sets using \texttt{train\_test\_split()}, where 80\% of the data is used for training, and 20\% is reserved for testing. The \texttt{random\_state} is set to ensure reproducibility of the results. A Logistic Regression model is initialized with a multi-class strategy (\texttt{multi\_class='ovr'}) and a high number of iterations (\texttt{max\_iter=10000}) to allow the model to converge. The model is then trained on the training data using the \texttt{fit()} method. After training, predictions are made on the test set using the \texttt{predict()} method. The model's performance is evaluated by calculating the accuracy score, which is printed as a percentage. Additionally, a detailed classification report is generated, which includes metrics such as precision, recall, and F1-score for each class. Lastly, a confusion matrix is printed to visualize the model's classification performance and to understand how well the model distinguishes between different mental health issues. This end-to-end pipeline is crucial for applying Logistic Regression to textual data, allowing for effective classification of mental health issues based on Reddit posts.
+
+
+\subsubsection{Naive Bayes for Classification}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Naive Bayes for Mental Health Classification]
+    \begin{lstlisting}[language=Python]
+
+        import pandas as pd
+        from sklearn.model_selection import train_test_split
+        from sklearn.feature_extraction.text import CountVectorizer
+        from sklearn.naive_bayes import MultinomialNB
+        from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+        
+        # Load the preprocessed dataset
+        dataset = pd.read_csv('preprocessed_mental_health.csv')
+        
+        # Check if 'cleaned_text' and 'mental_health_issue' columns exist
+        if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+            raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+        
+        # Remove rows with missing values in 'cleaned_text' column
+        dataset.dropna(subset=['cleaned_text'], inplace=True)
+        
+        # Initialize the CountVectorizer and fit/transform the cleaned text
+        NBvectorizer = CountVectorizer()
+        X = NBvectorizer.fit_transform(dataset['cleaned_text'])
+        
+        # Prepare the target variable
+        y = dataset['mental_health_issue']
+        
+        # Split the dataset into Training and Test Sets
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        
+        # Initialize the Naive Bayes classifier
+        NBmodel = MultinomialNB()
+        
+        # Fit the model
+        NBmodel.fit(X_train, y_train)
+    \end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Naive Bayes for Mental Health Classification]
+    \begin{lstlisting}[language=Python]
+        # Make predictions
+        y_pred = NBmodel.predict(X_test)
+        
+        # Evaluate the model
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'Accuracy: {accuracy * 100:.2f}%')
+        
+        # Print classification report
+        print("Classification Report:\n", classification_report(y_test, y_pred))
+        
+        # Print confusion matrix
+        print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The provided code demonstrates how to apply the Naive Bayes classifier (MultinomialNB) for mental health classification using a preprocessed dataset. First, the dataset is loaded, and a check is performed to ensure that it contains the necessary columns, specifically \texttt{cleaned\_text} and \texttt{mental\_health\_issue}. If these columns are missing, an error is raised. The dataset is then cleaned by removing rows that have missing values in the \texttt{cleaned\_text} column using the \texttt{dropna()} function. Next, the \texttt{CountVectorizer} is initialized and applied to the \texttt{cleaned\_text} column to convert the text data into a numerical format suitable for machine learning. This is accomplished by transforming the text into a document-term matrix where each row represents a document (post) and each column represents a unique term (word). The target variable, \texttt{mental\_health\_issue}, is also extracted from the dataset. The dataset is then split into training and testing sets using \texttt{train\_test\_split()}, where 80\% of the data is used for training, and 20\% is reserved for testing. The \texttt{random\_state} is set to ensure reproducibility of the results. A Naive Bayes model (\texttt{MultinomialNB}) is initialized and trained on the training data using the \texttt{fit()} method. After training, predictions are made on the test set using the \texttt{predict()} method. The model's performance is evaluated by calculating the accuracy score, which is printed as a percentage. Additionally, a detailed classification report is generated, which includes metrics such as precision, recall, and F1-score for each class. Lastly, a confusion matrix is printed to visualize the model's classification performance and to understand how well the model distinguishes between different mental health issues. This end-to-end pipeline is crucial for applying the Naive Bayes algorithm to textual data, allowing for effective classification of mental health issues based on Reddit posts.
+
+\subsubsection{Support Vector Machine for Classification}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Support Vector Classifier Implementation]
+    \begin{lstlisting}[language=Python]
+    import pandas as pd
+    from sklearn.model_selection import train_test_split
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.svm import SVC
+    from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+    # Load the preprocessed dataset
+    dataset = pd.read_csv('preprocessed_mental_health.csv')
+
+    # Check if 'cleaned_text' and 'mental_health_issue' columns exist
+    if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+        raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+
+    # Remove rows with missing values in 'cleaned_text' column
+    dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+    # Initialize the CountVectorizer and fit/transform the cleaned text
+    SVMvectorizer = CountVectorizer()
+    X = SVMvectorizer.fit_transform(dataset['cleaned_text'])
+
+    # Prepare the target variable
+    y = dataset['mental_health_issue']
+
+    # Split the dataset into Training and Test Sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Initialize the Support Vector Classifier
+    SVMmodel = SVC(kernel='linear', C=1, random_state=42, probability=True)  # You can adjust parameters as needed
+
+    # Train the model
+    SVMmodel.fit(X_train, y_train)
+
+    # Make predictions on the test set
+    y_pred = SVMmodel.predict(X_test)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Support Vector Classifier Implementation]
+    \begin{lstlisting}[language=Python]
+    # Evaluate the model
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'Accuracy: {accuracy * 100:.2f}%')
+
+    # Print classification report
+    print("Classification Report:\n", classification_report(y_test, y_pred))
+
+    # Print confusion matrix
+    print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The provided code demonstrates how to apply the Support Vector Classifier (SVC) for mental health classification using a preprocessed dataset. First, the dataset is loaded, and a check is performed to ensure that it contains the necessary columns, specifically \texttt{cleaned\_text} and \texttt{mental\_health\_issue}. If these columns are missing, an error is raised. The dataset is then cleaned by removing rows that have missing values in the \texttt{cleaned\_text} column using the \texttt{dropna()} function.Next, the \texttt{CountVectorizer} is initialized and applied to the \texttt{cleaned\_text} column to convert the text data into a numerical format suitable for machine learning. This is accomplished by transforming the text into a document-term matrix where each row represents a document (post) and each column represents a unique term (word). The target variable, \texttt{mental\_health\_issue}, is also extracted from the dataset. The dataset is then split into training and testing sets using \texttt{train\_test\_split()}, where 80\% of the data is used for training, and 20\% is reserved for testing. The \texttt{random\_state} is set to ensure reproducibility of the results. A Support Vector Classifier model (\texttt{SVC}) is initialized with a linear kernel (\texttt{kernel='linear'}), regularization parameter \texttt{C=1}, and the probability flag set to \texttt{True} to enable probability estimates. The model is then trained on the training data using the \texttt{fit()} method. After training, predictions are made on the test set using the \texttt{predict()} method. The model's performance is evaluated by calculating the accuracy score, which is printed as a percentage. Additionally, a detailed classification report is generated, which includes metrics such as precision, recall, and F1-score for each class. Lastly, a confusion matrix is printed to visualize the model's classification performance and to understand how well the model distinguishes between different mental health issues. This end-to-end pipeline is crucial for applying the Support Vector Machine (SVM) algorithm to textual data, allowing for effective classification of mental health issues based on Reddit posts.
+
+\subsubsection{Random Forest for Classification}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Random Forest Classifier Implementation]
+    \begin{lstlisting}[language=Python]
+    import pandas as pd
+    from sklearn.model_selection import train_test_split
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+    # Load the preprocessed dataset
+    dataset = pd.read_csv('preprocessed_mental_health.csv')
+
+    # Check if 'cleaned_text' and 'mental_health_issue' columns exist
+    if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+        raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+
+    # Remove rows with missing values in 'cleaned_text' column
+    dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+    # Initialize the CountVectorizer and fit/transform the cleaned text
+    RFvectorizer = CountVectorizer()
+    X = RFvectorizer.fit_transform(dataset['cleaned_text'])
+
+    # Prepare the target variable
+    y = dataset['mental_health_issue']
+
+    # Split the dataset into Training and Test Sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Initialize the Random Forest Classifier with added parameters
+    RFmodel = RandomForestClassifier(
+        n_estimators=3000,         # Number of trees
+        max_depth=None,            # Maximum depth of each tree
+        min_samples_split=20,      # Minimum number of samples to split a node
+
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Random Forest Classifier Implementation]
+    \begin{lstlisting}[language=Python]
+        min_samples_leaf=1,        # Minimum number of samples in a leaf node
+        max_features='sqrt',       # Number of features to consider at each split
+        bootstrap=False,            # Whether to use bootstrapping
+
+        random_state=42            # For reproducibility
+    )
+
+    # Train the model
+    RFmodel.fit(X_train, y_train)
+
+    # Make predictions on the test set
+    y_pred = RFmodel.predict(X_test)
+
+    # Evaluate the model
+    accuracy = accuracy_score(y_test, y_pred)
+    print(f'Accuracy: {accuracy * 100:.2f}%')
+
+    # Print classification report
+    print("Classification Report:\n", classification_report(y_test, y_pred))
+
+    # Print confusion matrix
+    print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The provided code demonstrates how to apply the Random Forest Classifier for mental health classification using a preprocessed dataset. First, the dataset is loaded, and a check is performed to ensure that it contains the necessary columns, specifically \texttt{cleaned\_text} and \texttt{mental\_health\_issue}. If these columns are missing, an error is raised. The dataset is then cleaned by removing rows that have missing values in the \texttt{cleaned\_text} column using the \texttt{dropna()} function. Next, the \texttt{CountVectorizer} is initialized and applied to the \texttt{cleaned\_text} column to convert the text data into a numerical format suitable for machine learning. This is accomplished by transforming the text into a document-term matrix where each row represents a document (post) and each column represents a unique term (word). The target variable, \texttt{mental\_health\_issue}, is also extracted from the dataset. The dataset is then split into training and testing sets using \texttt{train\_test\_split()}, where 80\% of the data is used for training, and 20\% is reserved for testing. The \texttt{random\_state} is set to ensure reproducibility of the results. A Random Forest Classifier model is initialized with several hyperparameters. Specifically, \texttt{n\_estimators=3000} defines the number of decision trees in the forest. The \texttt{max\_depth=None} means the trees are allowed to grow until all leaves are pure or contain fewer than the minimum samples required to split a node. The \texttt{min\_samples\_split=20} and \texttt{min\_samples\_leaf=1} specify the minimum number of samples required to split an internal node and the minimum number of samples required to be at a leaf node, respectively. The \texttt{max\_features='sqrt'} sets the maximum number of features to consider for the best split at each node to be the square root of the total number of features. \texttt{bootstrap=False} disables bootstrapping, meaning the entire dataset is used to build each tree. After initialization, the model is trained using the \texttt{fit()} method on the training data. After training, predictions are made on the test set using the \texttt{predict()} method. The model's performance is evaluated by calculating the accuracy score, which is printed as a percentage. Additionally, a detailed classification report is generated, which includes metrics such as precision, recall, and F1-score for each class. Lastly, a confusion matrix is printed to visualize the model's classification performance and to understand how well the model distinguishes between different mental health issues. This end-to-end pipeline is essential for applying the Random Forest algorithm to textual data, allowing for effective classification of mental health issues based on Reddit posts.
+
+\subsubsection{XGBoost for Classification}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=XGBoost Classifier Implementation]
+    \begin{lstlisting}[language=Python]
+    import pandas as pd
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import LabelEncoder
+    from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+    import xgboost as xgb
+
+    # Load the dataset
+    data = pd.read_csv('preprocessed_mental_health.csv')
+
+    # Separate features and target
+    X = data['text']
+    y = data['mental_health_issue']
+
+    # Encode target labels
+    label_encoder = LabelEncoder()
+    y = label_encoder.fit_transform(y)
+
+    # Split dataset into training and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=XGBoost Classifier Implementation]
+    \begin{lstlisting}[language=Python]
+    # Convert text data to numerical data using TF-IDF Vectorizer
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    tfidf = TfidfVectorizer(max_features=5000)
+    X_train = tfidf.fit_transform(X_train)
+    X_test = tfidf.transform(X_test)
+
+    # Define the XGBoost classifier
+    xgb_clf = xgb.XGBClassifier(objective='multi:softmax', num_class=5, eval_metric='mlogloss', use_label_encoder=False)
+
+    # Train the model
+    xgb_clf.fit(X_train, y_train)
+
+    # Predict on the test set
+    y_pred = xgb_clf.predict(X_test)
+
+    # Evaluate the model
+    accuracy = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred, target_names=label_encoder.classes_)
+
+    print(f"Accuracy: {accuracy * 100:.2f}%")
+    print("Classification Report:\n", report)
+
+    # Print confusion matrix
+    print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The provided code demonstrates how to apply XGBoost for mental health classification using a preprocessed dataset. First, the dataset is loaded, and the target variable (\texttt{mental\_health\_issue}) is separated from the feature variable (\texttt{text}). The target variable is then encoded using \texttt{LabelEncoder()} to convert the categorical labels into numerical values, which are required for machine learning algorithms. Next, the dataset is split into training and testing sets using \texttt{train\_test\_split()}, where 80\% of the data is used for training, and 20\% is reserved for testing. The \texttt{random\_state} is set to ensure reproducibility of the results. The text data is then transformed into numerical features using the \texttt{TfidfVectorizer()}. This vectorizer converts the raw text into a matrix of TF-IDF (Term Frequency-Inverse Document Frequency) features, which are more suitable for training a machine learning model. The \texttt{max\_features=5000} parameter limits the number of features to the 5000 most frequent terms in the dataset. The XGBoost classifier is then initialized with several hyperparameters. The \texttt{objective='multi:softmax'} indicates that the task is a multi-class classification problem. The \texttt{num\_class=5} parameter specifies the number of classes for the classification task, and \texttt{eval\_metric='mlogloss'} is set to use the log loss metric for evaluation. \texttt{use\_label\_encoder=False} disables the automatic label encoding of target labels, as we have already manually encoded the labels. After initialization, the model is trained on the training data using the \texttt{fit()} method. After training, predictions are made on the test set using the \texttt{predict()} method. The model's performance is evaluated by calculating the accuracy score, which is printed as a percentage. Additionally, a detailed classification report is generated, which includes metrics such as precision, recall, and F1-score for each class. Lastly, a confusion matrix is printed to visualize the model's classification performance and to understand how well the model distinguishes between different mental health issues. This pipeline demonstrates the use of XGBoost in combination with TF-IDF vectorization for text classification, enabling effective classification of mental health issues based on Reddit posts.
+
+\subsubsection{Long Short Term Memory based Classification}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
+    \begin{lstlisting}[language=Python]
+    import pandas as pd
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from sklearn.metrics import confusion_matrix, classification_report
+    from sklearn.preprocessing import LabelEncoder
+    from tensorflow.keras.preprocessing.text import Tokenizer
+    from tensorflow.keras.preprocessing.sequence import pad_sequences
+    from tensorflow.keras.models import Sequential
+    from tensorflow.keras.layers import Embedding, LSTM, Dense, Dropout
+    from tensorflow.keras.utils import to_categorical
+    from sklearn.model_selection import train_test_split
+
+    # Load the dataset
+    data = pd.read_csv('preprocessed_mental_health.csv')
+
+    # Separate features and target
+    X = data['text']
+    y = data['mental_health_issue']
+
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
+    \begin{lstlisting}[language=Python]
+    # Encode target labels
+    label_encoder = LabelEncoder()
+    y = label_encoder.fit_transform(y)
+    y = to_categorical(y)  # Convert labels to one-hot encoded format for multi-class classification
+
+    # Split dataset into training and test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Tokenize and pad the text sequences
+    vocab_size = 10000  # Set a vocabulary size
+    max_length = 100    # Set a max length for padding
+
+    tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
+    tokenizer.fit_on_texts(X_train)
+
+    X_train_seq = tokenizer.texts_to_sequences(X_train)
+    X_test_seq = tokenizer.texts_to_sequences(X_test)
+
+    X_train_padded = pad_sequences(X_train_seq, maxlen=max_length, padding='post', truncating='post')
+    X_test_padded = pad_sequences(X_test_seq, maxlen=max_length, padding='post', truncating='post')
+
+    # Build the LSTM model
+    model = Sequential([
+        Embedding(vocab_size, 128, input_length=max_length),
+        LSTM(128, return_sequences=True),
+        Dropout(0.2),
+        LSTM(64),
+        Dropout(0.2),
+        Dense(64, activation='relu'),
+        Dense(y.shape[1], activation='softmax')  # Output layer with softmax for multi-class classification
+    ])
+
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+    # Train the model
+    history = model.fit(X_train_padded, y_train, epochs=10, batch_size=32, validation_data=(X_test_padded, y_test))
+
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
+    \begin{lstlisting}[language=Python]
+
+    # Plot training history
+    plt.figure(figsize=(12, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['accuracy'], label='Training Accuracy')
+    plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+    plt.title('Model Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Model Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()
+
+    # Evaluate the model on test data
+    test_loss, test_accuracy = model.evaluate(X_test_padded, y_test)
+    print(f"Test Accuracy: {test_accuracy * 100:.2f}%")
+
+    # Generate predictions and convert back from one-hot encoding
+    y_pred = model.predict(X_test_padded)
+    y_pred_classes = np.argmax(y_pred, axis=1)
+    y_test_classes = np.argmax(y_test, axis=1)
+
+    # Output classification report
+    print("Classification Report:\n", classification_report(y_test_classes, y_pred_classes, target_names=label_encoder.classes_))
+
+    # Plot Confusion Matrix
+    cm = confusion_matrix(y_test_classes, y_pred_classes)
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
+
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
+    \begin{lstlisting}[language=Python]
+    plt.xlabel('Predicted Labels')
+    plt.ylabel('True Labels')
+    plt.title('Confusion Matrix')
+    plt.show()
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code demonstrates how to apply a Long Short-Term Memory (LSTM) neural network for text classification, specifically for predicting mental health issues based on preprocessed Reddit data. The dataset is loaded and the target variable (\texttt{mental\_health\_issue}) is encoded into a one-hot format for multi-class classification. The dataset is split into training and testing sets. Text data is tokenized and padded to ensure uniform input lengths for the LSTM model. The model consists of embedding layers, LSTM layers with dropout for regularization, and dense layers for classification. The model is trained on the training data, and performance is monitored using validation data. The training and validation accuracy and loss are plotted. The model is evaluated on the test data, and performance metrics such as accuracy and classification report are displayed. A confusion matrix is plotted to visualize model performance.
+
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/LSTM Epoch.png}  
+    \caption{Output for LSTM Epochs}
+    \label{LSTm Epochs}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.85\textwidth]{Images/LSTM Accuracy v Epoch.png}  
+    \caption{Accuracy v/s Epoch}
+    \label{Accuracy vs Epoch LSTM}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.85\textwidth]{Images/LSTM Loss v Epoch.png}  
+    \caption{Loss v/s Epoch}
+    \label{Loss vs Epoch LSTM}  % Label for referencing the figure
+\end{figure}
+
+% ------------------------- Implementation Ends -----------------------------
