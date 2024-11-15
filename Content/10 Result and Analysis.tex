@@ -114,7 +114,7 @@ The Logistic Regression model performed well with an overall accuracy of 87.66\%
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.85\textwidth]{Images/LR Confusion Matrix.png}  
+    \includegraphics[width=0.8\textwidth]{Images/LR Confusion Matrix.png}  
     \caption{Confusion Matrix (Logistic Regression)}
     \label{LRCM}  % Label for referencing the figure
 \end{figure}
@@ -161,7 +161,7 @@ The Logistic Regression model performed well with an overall accuracy of 87.66\%
 \end{center}
 
 \vspace{0.25em}
-
+\pagebreak
 \begin{center}
     \textbf{ROC Curve Areas for Each Class} \\[0.5em]
     \begin{tabular}{|l|c|}
@@ -177,15 +177,17 @@ The Logistic Regression model performed well with an overall accuracy of 87.66\%
 
 \vspace{0.25em}
 
-\noindent
-The Naive Bayes model achieved an overall accuracy of 83.63\%, indicating a reasonable performance. The classification report shows strong results for the Normal class, with a precision of 0.96 and a recall of 0.92, resulting in an F1-score of 0.94. However, the Bipolar class exhibits much lower recall (0.45) and F1-score (0.58), suggesting that the model struggles to accurately identify Bipolar instances. Misclassifications are more frequent for Bipolar, often being confused with Depression and PTSD. The Anxiety class, although having decent precision (0.70), shows a lower recall (0.73), indicating that it also faces challenges in classification. The Confusion Matrix highlights that the model has difficulty distinguishing Bipolar and Depression from each other, with a large number of misclassifications across these classes. On the other hand, the Normal class is well-separated and correctly classified, with 2006 true positives, which likely contributes to the high overall accuracy. PTSD also shows relatively good classification results, with misclassifications being less frequent. The ROC AUC Curve Areas show that the model performs well for most classes, with the Normal class having the highest AUC score (0.99), followed by Depression and PTSD with AUCs of 0.94. While the model performs well for distinguishing between classes like Normal and Depression, the lower AUC for Bipolar (0.89) indicates that there may still be room for improvement in distinguishing this class from others.
-
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.75\textwidth]{Images/NB Confusion Matrix.png}  
+    \includegraphics[width=0.8\textwidth]{Images/NB Confusion Matrix.png}  
     \caption{Confusion Matrix (Naive Bayes)}
     \label{NBCM}  % Label for referencing the figure
 \end{figure}
+
+\noindent
+The Naive Bayes model achieved an overall accuracy of 83.63\%, indicating a reasonable performance. The classification report shows strong results for the Normal class, with a precision of 0.96 and a recall of 0.92, resulting in an F1-score of 0.94. However, the Bipolar class exhibits much lower recall (0.45) and F1-score (0.58), suggesting that the model struggles to accurately identify Bipolar instances. Misclassifications are more frequent for Bipolar, often being confused with Depression and PTSD. The Anxiety class, although having decent precision (0.70), shows a lower recall (0.73), indicating that it also faces challenges in classification. The Confusion Matrix highlights that the model has difficulty distinguishing Bipolar and Depression from each other, with a large number of misclassifications across these classes. On the other hand, the Normal class is well-separated and correctly classified, with 2006 true positives, which likely contributes to the high overall accuracy. PTSD also shows relatively good classification results, with misclassifications being less frequent. The ROC AUC Curve Areas show that the model performs well for most classes, with the Normal class having the highest AUC score (0.99), followed by Depression and PTSD with AUCs of 0.94. While the model performs well for distinguishing between classes like Normal and Depression, the lower AUC for Bipolar (0.89) indicates that there may still be room for improvement in distinguishing this class from others.
+
+
 
 \begin{figure}[h!]  
     \centering
@@ -245,16 +247,15 @@ The Naive Bayes model achieved an overall accuracy of 83.63\%, indicating a reas
 
 \vspace{0.25em}
 
-\noindent
-The Support Vector Machine (SVM) model achieved an accuracy of 85.13\%, demonstrating strong performance in classifying the various mental health conditions. The classification report indicates that the Normal class has the highest precision (0.94) and recall (0.95), resulting in an F1-score of 0.95, showing that the model is particularly good at identifying instances of normal behavior. However, the Bipolar class shows lower performance, with a precision of 0.62 and recall of 0.61, suggesting that the model struggles more with identifying bipolar disorder instances. The recall for the Anxiety class is relatively high (0.76), though precision is somewhat lower (0.72), indicating a balanced classification performance for this condition. The confusion matrix reveals that the model is generally accurate, with the Normal class being correctly classified most of the time (2084 true positives). However, some misclassifications occur for classes like Bipolar, Depression, and PTSD, with notable misclassifications of Bipolar as Depression and Normal. These misclassifications are likely affecting the overall recall for certain classes. The ROC AUC curve areas demonstrate that the model has excellent performance in distinguishing between most classes. The Normal class has the highest AUC of 0.98, followed by Anxiety, Depression, and PTSD with AUCs of 0.96. Bipolar, although still high at 0.90, lags behind the other classes, reflecting the model's challenge in distinguishing Bipolar from other conditions.
-
-
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.75\textwidth]{Images/SVM Confusion Matrix.png}  
+    \includegraphics[width=0.8\textwidth]{Images/SVM Confusion Matrix.png}  
     \caption{Confusion Matrix (SVM)}
     \label{SVMCM}  % Label for referencing the figure
 \end{figure}
+
+\noindent
+The Support Vector Machine (SVM) model achieved an accuracy of 85.13\%, demonstrating strong performance in classifying the various mental health conditions. The classification report indicates that the Normal class has the highest precision (0.94) and recall (0.95), resulting in an F1-score of 0.95, showing that the model is particularly good at identifying instances of normal behavior. However, the Bipolar class shows lower performance, with a precision of 0.62 and recall of 0.61, suggesting that the model struggles more with identifying bipolar disorder instances. The recall for the Anxiety class is relatively high (0.76), though precision is somewhat lower (0.72), indicating a balanced classification performance for this condition. The confusion matrix reveals that the model is generally accurate, with the Normal class being correctly classified most of the time (2084 true positives). However, some misclassifications occur for classes like Bipolar, Depression, and PTSD, with notable misclassifications of Bipolar as Depression and Normal. These misclassifications are likely affecting the overall recall for certain classes. The ROC AUC curve areas demonstrate that the model has excellent performance in distinguishing between most classes. The Normal class has the highest AUC of 0.98, followed by Anxiety, Depression, and PTSD with AUCs of 0.96. Bipolar, although still high at 0.90, lags behind the other classes, reflecting the model's challenge in distinguishing Bipolar from other conditions.
 
 \begin{figure}[h!]  
     \centering
@@ -314,15 +315,15 @@ The Support Vector Machine (SVM) model achieved an accuracy of 85.13\%, demonstr
 
 \vspace{0.25em}
 
-\noindent
-The Random Forest model achieved an accuracy of 86.00\%, indicating a strong performance in classifying the mental health conditions. The classification report shows that the Normal class achieved the highest recall (1.00) and a precision of 0.88, resulting in a high F1-score of 0.93. This reflects the model’s ability to correctly classify the majority of the Normal instances. The Bipolar class, however, shows a much lower recall (0.47), which indicates that the model has difficulty identifying instances of Bipolar disorder, as reflected by its F1-score of 0.62. The Anxiety and PTSD classes have relatively balanced performance, with moderate precision and recall values. The confusion matrix illustrates the distribution of misclassifications. The Normal class is correctly classified almost entirely (2173 true positives), while other classes like Bipolar and PTSD exhibit significant misclassifications, particularly Bipolar, which is often misclassified as Depression and Normal. The ROC AUC scores for all classes are quite high, indicating that the model is effective at distinguishing between the classes. The Anxiety, Depression, Normal, and PTSD classes each have AUC values above 0.96, with the Normal and Depression classes achieving 0.97. Bipolar has the lowest AUC at 0.89, which corresponds to its lower classification performance. These AUC values suggest that the Random Forest model is proficient in distinguishing between most of the classes, though it faces challenges in identifying Bipolar disorder.
-
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.7\textwidth]{Images/RF Confusion Matrix.png}  
+    \includegraphics[width=0.8\textwidth]{Images/RF Confusion Matrix.png}  
     \caption{Confusion Matrix (Random Forest)}
     \label{RFCM}  % Label for referencing the figure
 \end{figure}
+
+\noindent
+The Random Forest model achieved an accuracy of 86.00\%, indicating a strong performance in classifying the mental health conditions. The classification report shows that the Normal class achieved the highest recall (1.00) and a precision of 0.88, resulting in a high F1-score of 0.93. This reflects the model’s ability to correctly classify the majority of the Normal instances. The Bipolar class, however, shows a much lower recall (0.47), which indicates that the model has difficulty identifying instances of Bipolar disorder, as reflected by its F1-score of 0.62. The Anxiety and PTSD classes have relatively balanced performance, with moderate precision and recall values. The confusion matrix illustrates the distribution of misclassifications. The Normal class is correctly classified almost entirely (2173 true positives), while other classes like Bipolar and PTSD exhibit significant misclassifications, particularly Bipolar, which is often misclassified as Depression and Normal. The ROC AUC scores for all classes are quite high, indicating that the model is effective at distinguishing between the classes. The Anxiety, Depression, Normal, and PTSD classes each have AUC values above 0.96, with the Normal and Depression classes achieving 0.97. Bipolar has the lowest AUC at 0.89, which corresponds to its lower classification performance. These AUC values suggest that the Random Forest model is proficient in distinguishing between most of the classes, though it faces challenges in identifying Bipolar disorder.
 
 \begin{figure}[h!]  
     \centering
@@ -400,6 +401,75 @@ The XGBoost model achieved an accuracy of 87.39\%, demonstrating strong overall 
 \end{figure}
 
 
+\subsection{Results of KNN}
+
+\begin{center}
+    \textbf{KNN Classification Report} \\[0.5em]
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        Anxiety        & 0.58               & 0.31            & 0.40              & 379              \\ \hline
+        Bipolar        & 0.18               & 0.59            & 0.28              & 384              \\ \hline
+        Depression     & 0.47               & 0.39            & 0.43              & 373              \\ \hline
+        Normal         & 0.79               & 0.69            & 0.73              & 2183             \\ \hline
+        PTSD           & 0.80               & 0.09            & 0.16              & 394              \\ \hline
+        \textbf{Accuracy} & \multicolumn{4}{|c|}{54.46\%} \\ \hline
+        \textbf{Macro Avg} & 0.56            & 0.41            & 0.40              & 3713             \\ \hline
+        \textbf{Weighted Avg} & 0.67         & 0.54            & 0.56              & 3713             \\ \hline
+    \end{tabular}
+\end{center}
+
+\vspace{0.25em}
+
+\begin{center}
+    \textbf{Confusion Matrix for KNN Model} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        & \textbf{Anxiety} & \textbf{Bipolar} & \textbf{Depression} & \textbf{Normal} & \textbf{PTSD} \\ \hline
+        \textbf{Anxiety}    & 117 & 122 & 35  & 101 & 4   \\ \hline
+        \textbf{Bipolar}    & 7   & 226 & 40  & 108 & 3   \\ \hline
+        \textbf{Depression} & 24  & 129 & 145 & 74  & 1   \\ \hline
+        \textbf{Normal}     & 11  & 657 & 15  & 1499 & 1  \\ \hline
+        \textbf{PTSD}       & 41  & 120 & 74  & 124 & 35  \\ \hline
+    \end{tabular}
+\end{center}
+
+\vspace{0.25em}
+
+\begin{center}
+    \textbf{ROC Curve Areas for Each Class} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Class}  & \textbf{ROC AUC} \\ \hline
+        Anxiety         & 0.73            \\ \hline
+        Bipolar         & 0.67            \\ \hline
+        Depression      & 0.77            \\ \hline
+        Normal          & 0.80            \\ \hline
+        PTSD            & 0.67            \\ \hline
+    \end{tabular}
+\end{center}
+
+\vspace{0.25em}
+
+\noindent
+The KNN model achieved an accuracy of 54.46\%, which is considerably lower than the XGBoost model. The classification report reveals a significant imbalance in performance across classes. The 'Normal' class achieved relatively high precision (0.79) and recall (0.69), reflecting the model's tendency to perform well with dominant classes. However, the 'Anxiety' and 'PTSD' classes performed poorly, especially with PTSD having a very low recall of 0.09, indicating substantial misclassification. The confusion matrix suggests that the model struggles with distinguishing between some classes, especially 'Anxiety' and 'Bipolar,' where confusion with other categories is high. The ROC AUC scores are relatively lower compared to the XGBoost model, with 'Normal' having the highest AUC of 0.80. These results indicate that while the KNN model offers a lower overall performance, it still provides a reasonable level of discrimination for the 'Normal' class.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.85\textwidth]{Images/KNN Confusion Matrix.png}  
+    \caption{Confusion Matrix (KNN)}
+    \label{KNNCM}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/KNN ROC.png}  
+    \caption{ROC AUC (KNN)}
+    \label{KNnROC}  % Label for referencing the figure
+\end{figure}
+
+
+
 \subsection{Results of LSTM}
 
 \begin{center}
@@ -434,6 +504,7 @@ The XGBoost model achieved an accuracy of 87.39\%, demonstrating strong overall 
 \end{center}
 
 \vspace{0.25em}
+\pagebreak
 
 \begin{center}
     \textbf{ROC Curve Areas for Each Class} \\[0.5em]

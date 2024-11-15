@@ -462,6 +462,68 @@ The provided code demonstrates how to apply the Random Forest Classifier for men
 \noindent
 The provided code demonstrates how to apply XGBoost for mental health classification using a preprocessed dataset. First, the dataset is loaded, and the target variable (\texttt{mental\_health\_issue}) is separated from the feature variable (\texttt{text}). The target variable is then encoded using \texttt{LabelEncoder()} to convert the categorical labels into numerical values, which are required for machine learning algorithms. Next, the dataset is split into training and testing sets using \texttt{train\_test\_split()}, where 80\% of the data is used for training, and 20\% is reserved for testing. The \texttt{random\_state} is set to ensure reproducibility of the results. The text data is then transformed into numerical features using the \texttt{TfidfVectorizer()}. This vectorizer converts the raw text into a matrix of TF-IDF (Term Frequency-Inverse Document Frequency) features, which are more suitable for training a machine learning model. The \texttt{max\_features=5000} parameter limits the number of features to the 5000 most frequent terms in the dataset. The XGBoost classifier is then initialized with several hyperparameters. The \texttt{objective='multi:softmax'} indicates that the task is a multi-class classification problem. The \texttt{num\_class=5} parameter specifies the number of classes for the classification task, and \texttt{eval\_metric='mlogloss'} is set to use the log loss metric for evaluation. \texttt{use\_label\_encoder=False} disables the automatic label encoding of target labels, as we have already manually encoded the labels. After initialization, the model is trained on the training data using the \texttt{fit()} method. After training, predictions are made on the test set using the \texttt{predict()} method. The model's performance is evaluated by calculating the accuracy score, which is printed as a percentage. Additionally, a detailed classification report is generated, which includes metrics such as precision, recall, and F1-score for each class. Lastly, a confusion matrix is printed to visualize the model's classification performance and to understand how well the model distinguishes between different mental health issues. This pipeline demonstrates the use of XGBoost in combination with TF-IDF vectorization for text classification, enabling effective classification of mental health issues based on Reddit posts.
 
+
+\subsubsection{K Nearest Neighbours for Classification}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=k-NN Classifier Implementation for Mental Health Classification]
+    \begin{lstlisting}[language=Python]
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Load the preprocessed dataset
+dataset = pd.read_csv('preprocessed_mental_health.csv')
+
+# Check if 'cleaned_text' and 'mental_health_issue' columns exist
+if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+    raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+
+# Remove rows with missing values in 'cleaned_text' column
+dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+# Initialize the CountVectorizer and fit/transform the cleaned text
+KNNvectorizer = CountVectorizer()
+X = KNNvectorizer.fit_transform(dataset['cleaned_text'])
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=k-NN Classifier Implementation for Mental Health Classification]
+    \begin{lstlisting}[language=Python]
+# Prepare the target variable
+y = dataset['mental_health_issue']
+
+# Split the dataset into Training and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the k-NN classifier
+KNNmodel = KNeighborsClassifier(n_neighbors=5)  # You can adjust the number of neighbors
+
+# Fit the model
+KNNmodel.fit(X_train, y_train)
+
+# Make predictions
+y_pred = KNNmodel.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Print classification report
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Print confusion matrix
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The code provided demonstrates how to implement a k-Nearest Neighbors (k-NN) classifier for mental health issue classification based on text data. Initially, the dataset is loaded from a CSV file, and a check is performed to ensure the presence of the necessary columns, namely \texttt{cleaned\_text} and \texttt{mental\_health\_issue}. If any of these columns are missing, the program raises an error. The next step involves removing rows with missing text data from the \texttt{cleaned\_text} column using \texttt{dropna()}. The \texttt{CountVectorizer} from \texttt{sklearn} is used to transform the textual data into a matrix of token counts, which is suitable for machine learning. This transformation converts each post (document) into a vector of word occurrences, with each unique word in the dataset being represented by a column. The target variable, \texttt{mental\_health\_issue}, is extracted, and the dataset is split into training and test sets using \texttt{train\_test\_split()}. The training set consists of 80\% of the data, and the remaining 20\% is used for testing. A k-NN classifier is initialized with 5 neighbors (\texttt{n\_neighbors=5}), though this number can be adjusted for tuning the model. The classifier is trained on the training data using the \texttt{fit()} method. Once the model is trained, it is used to predict mental health issues for the test set, and the accuracy of the predictions is calculated and printed. In addition to the accuracy score, a detailed classification report is generated, which includes metrics like precision, recall, and F1-score for each class. Finally, a confusion matrix is printed to help visualize the model’s performance in terms of how well it classifies different mental health issues. This end-to-end pipeline demonstrates how to apply a k-NN classifier to a text classification task, specifically identifying mental health issues based on user-generated content such as social media posts.
+
+
+
+
 \subsubsection{Long Short Term Memory based Classification}
 
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
@@ -486,11 +548,6 @@ The provided code demonstrates how to apply XGBoost for mental health classifica
     X = data['text']
     y = data['mental_health_issue']
 
-\end{lstlisting}
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
-    \begin{lstlisting}[language=Python]
     # Encode target labels
     label_encoder = LabelEncoder()
     y = label_encoder.fit_transform(y)
@@ -498,7 +555,11 @@ The provided code demonstrates how to apply XGBoost for mental health classifica
 
     # Split dataset into training and test sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+\end{lstlisting}
+\end{tcolorbox}
 
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
+    \begin{lstlisting}[language=Python]
     # Tokenize and pad the text sequences
     vocab_size = 10000  # Set a vocabulary size
     max_length = 100    # Set a max length for padding
@@ -528,12 +589,6 @@ The provided code demonstrates how to apply XGBoost for mental health classifica
     # Train the model
     history = model.fit(X_train_padded, y_train, epochs=10, batch_size=32, validation_data=(X_test_padded, y_test))
 
-\end{lstlisting}
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
-    \begin{lstlisting}[language=Python]
-
     # Plot training history
     plt.figure(figsize=(12, 4))
     plt.subplot(1, 2, 1)
@@ -543,7 +598,11 @@ The provided code demonstrates how to apply XGBoost for mental health classifica
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.legend()
+\end{lstlisting}
+\end{tcolorbox}
 
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
+    \begin{lstlisting}[language=Python]
     plt.subplot(1, 2, 2)
     plt.plot(history.history['loss'], label='Training Loss')
     plt.plot(history.history['val_loss'], label='Validation Loss')
@@ -570,16 +629,11 @@ The provided code demonstrates how to apply XGBoost for mental health classifica
     plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
 
-\end{lstlisting}
-\end{tcolorbox}
-
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LSTM Model Implementation]
-    \begin{lstlisting}[language=Python]
     plt.xlabel('Predicted Labels')
     plt.ylabel('True Labels')
     plt.title('Confusion Matrix')
     plt.show()
-    \end{lstlisting}
+\end{lstlisting}
 \end{tcolorbox}
 
 \noindent

@@ -13,7 +13,19 @@
 
 % ---------- Start the prototype appendix
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Import Libraries and Setup]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=System Dependencies Installation]
+    \begin{lstlisting}[language=Bash]
+    !apt-get install -y ffmpeg libsm6 libxext6
+    !apt-get install -y tesseract-ocr
+    !apt-get install -y portaudio19-dev
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code installs essential system-level dependencies required for multimedia processing, Optical Character Recognition (OCR), and audio manipulation tasks. The ffmpeg library provides robust capabilities for processing video and audio data, supporting operations like format conversion, compression, and extraction. The libsm6 and libxext6 libraries are X Window System components needed for graphical processing and enabling compatibility with multimedia frameworks like OpenCV. The tesseract-ocr package installs Tesseract, a powerful OCR engine used for extracting text from images and documents. Lastly, portaudio19-dev is a development package for the PortAudio library, which enables cross-platform audio processing and is often required for speech recognition and audio streaming applications. These installations ensure that the environment is properly configured to handle complex data processing workflows.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Import Libraries]
     \begin{lstlisting}[language=Python]
     import streamlit as st
     import joblib
@@ -25,21 +37,54 @@
     from io import BytesIO
     from collections import Counter
     import google.generativeai as genai
+    import cv2
+    import numpy as np
+    import whisper
+    import tempfile
+    import os
+    from pydub import AudioSegment
+    import subprocess
+    import re
+    import librosa
+    import librosa.display
+    import tensorflow as tf
     import pytesseract
-    
-    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
     \end{lstlisting}
-    \end{tcolorbox}
-\noindent
-This section imports necessary libraries such as streamlit for the web interface, joblib for loading pre-trained models, pandas for data manipulation, praw for interacting with Reddit, and pytesseract for Optical Character Recognition (OCR). It also sets the Tesseract executable path for OCR.    
+\end{tcolorbox}
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Reddit API Setup and Functions]
+\noindent
+This code snippet includes various library imports essential for building a multi-functional application that processes and analyzes multimedia data, text, and machine learning tasks. Streamlit is used for building interactive web apps. Joblib assists with object serialization, and pandas handles structured data manipulation. PRAW enables interaction with Reddit's API, while Pillow facilitates image processing. GoogleTranslator supports text translation, and requests fetches data from web sources. BytesIO handles in-memory byte streams, and collections.Counter aids in counting elements in datasets. Google Generative AI tools are also incorporated for advanced AI tasks. For media processing, OpenCV and NumPy handle image and video manipulations. Whisper is an ASR (Automatic Speech Recognition) tool, and tempfile manages temporary files. Pydub processes audio, and subprocess executes shell commands. Re provides regular expressions for text parsing, Librosa supports audio feature extraction and visualization, and TensorFlow enables building machine learning models. Lastly, pytesseract extracts text from images using OCR (Optical Character Recognition), completing a robust toolset for diverse computational tasks.
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Configuration and Model Initialization]
     \begin{lstlisting}[language=Python]
+    # Configure Tesseract and FFMPEG
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+    os.environ["FFMPEG_BINARY"] = "/usr/bin/ffmpeg"
+    # Load Whisper model for audio transcription
+    whisper_model = whisper.load_model("base")
+    # Load the saved logistic regression model and vectorizer
+    model = joblib.load('LRmodel.pkl')
+    vectorizer = joblib.load('LRvectorizer.pkl')
     # Initialize Reddit API
-    reddit = praw.Reddit(client_id='<REDDIT_CLIENT_ID>',
-                         client_secret='JREDDIT_CLIENT_SECRET',
-                         user_agent='Mental Health')
-    
+    reddit = praw.Reddit(client_id='<CLIENT_ID>',
+client_secret='<CLIENT_SECRET_KEY>',user_agent='Mental Health')
+    # Configure Gemini API for wellbeing insights
+    genai.configure(api_key="<GEMINI_API_KEY>")
+    generation_config = {
+        "temperature": 1, "top_p": 0.95, "top_k": 40,         "max_output_tokens": 8192, "response_mime_type": "text/plain",
+    }
+    gemini_model = genai.GenerativeModel(
+        model_name="gemini-1.5-flash",        generation_config=generation_config,
+    )
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code initializes and configures various tools and models for a complex data-processing pipeline. The Tesseract OCR engine is configured by specifying its executable path to enable text extraction from images. The FFMPEG binary is similarly set to facilitate multimedia processing tasks. The Whisper model, a speech-to-text solution, is loaded with its base configuration for audio transcription. Saved machine learning artifacts, a logistic regression model, and a vectorizer are loaded using joblib, providing a pre-trained setup for text classification tasks. The Reddit API is initialized using PRAW, with credentials to interact with Reddit's platform for data retrieval. For generative AI tasks, the Gemini API is configured with an API key and generation parameters such as temperature, top-p sampling, and maximum output token limit. A generative model is instantiated using these configurations, designed to provide wellbeing insights. This setup creates a cohesive framework for multimedia processing, natural language processing, and machine learning applications.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Fetching Reddit User Text Posts]
+    \begin{lstlisting}[language=Python]
     # Function to fetch text-based posts from Reddit
     def fetch_user_text_posts(username):
         try:
@@ -50,30 +95,28 @@ This section imports necessary libraries such as streamlit for the web interface
             st.write(f"Error fetching text posts: {e}")
             return []
     \end{lstlisting}
-    \end{tcolorbox}
-\noindent
-This part sets up the Reddit API using praw to interact with Reddit. It also defines a function fetch\_user\_text\_posts that fetches the latest 20 posts from a given Reddit username, returning their title and self-text.
+\end{tcolorbox}
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Image OCR Functionality]
+\noindent
+This function, \texttt{fetch\_user\_text\_posts}, is designed to fetch text-based posts from a specified Reddit user. The function takes a \texttt{username} as an input and attempts to retrieve the most recent 20 text-based posts from that user’s Reddit submissions. Using the PRAW library, the \texttt{reddit.redditor(username)} method is called to access the user’s posts, and the function iterates over these posts, concatenating the title and the content (selftext) of each post into a single string. These concatenated post details are then stored in a list. If an error occurs during this process (such as network issues or invalid user input), the function catches the exception and displays an error message using Streamlit’s \texttt{st.write()}. If an exception is caught, an empty list is returned. This function is useful for collecting Reddit text data for further analysis or processing.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Fetching Image-Based Posts from Reddit and Performing OCR]
     \begin{lstlisting}[language=Python]
     # Function to fetch image-based posts from Reddit and perform OCR
     def fetch_user_images_and_extract_text(username):
         try:
             user = reddit.redditor(username)
             images = [post.url for post in user.submissions.new(limit=20) if post.url.endswith(('.jpg', '.jpeg', '.png', '.webp', '.bmp', '.tiff'))]
-    
+
             extracted_texts = []
             for image_url in images:
                 try:
                     response = requests.get(image_url)
                     image = Image.open(BytesIO(response.content))
                     st.image(image, caption="Fetched Image", use_column_width=True)
-    
-                    # Extract text from image
+
                     extracted_text = extract_text_from_image(image)
-                    extracted_text = "\n".join(extracted_text)
-    
-                    # Translate to English if needed
                     if extracted_text.strip():
                         translated_text = GoogleTranslator(source='auto', target='en').translate(extracted_text)
                         extracted_texts.append(translated_text)
@@ -81,64 +124,50 @@ This part sets up the Reddit API using praw to interact with Reddit. It also def
                         st.text(translated_text)
                 except Exception as e:
                     st.write(f"Error processing image {image_url}: {e}")
-    
+
             return extracted_texts
         except Exception as e:
             st.write(f"Error fetching images: {e}")
             return []
-
-            # Function to extract text from image using Tesseract
-            def extract_text_from_image(image):
-                extracted_text = pytesseract.image_to_string(image)
-                return extracted_text.splitlines()
     \end{lstlisting}
-    \end{tcolorbox}
+\end{tcolorbox}
+
 \noindent
-The above code fetches image posts from a Reddit user's submissions and extracts text from those images using OCR (Tesseract). It also translates the extracted text into English if necessary.
+This function, \texttt{fetch\_user\_images\_and\_extract\_text}, is designed to fetch image-based posts from a specified Reddit user and perform Optical Character Recognition (OCR) to extract text from the images. The function first attempts to retrieve the most recent 20 submissions from the specified Reddit user using the PRAW library. It filters the posts to include only those with image URLs that match common image file formats (e.g., \texttt{.jpg}, \texttt{.jpeg}, \texttt{.png}, etc.). For each valid image URL, the function fetches the image using the \texttt{requests} library and then processes it by opening the image with \texttt{Pillow}’s \texttt{Image.open()} method. The image is displayed on the Streamlit app using \texttt{st.image()} with the option to show it in the appropriate column width. After displaying the image, the function calls \texttt{extract\_text\_from\_image}, which performs OCR using Tesseract (assumed to be defined elsewhere in the code). If any text is successfully extracted, it is translated into English using the \texttt{GoogleTranslator} from the \texttt{deep\_translator} library, and the translated text is displayed on the app using \texttt{st.write()} and \texttt{st.text()}. In case of errors (e.g., issues fetching the image or processing the OCR), exceptions are caught and an error message is displayed via Streamlit’s \texttt{st.write()}. The function returns a list of extracted and translated texts from the images, or an empty list if any errors occur during the process. This function is helpful for gathering, processing, and translating text from image posts on Reddit.
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Text Classification and Wellbeing Insight]
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Classifying Text and Displaying Results]
     \begin{lstlisting}[language=Python]
-
-    # Configure the Gemini API for wellbeing mapping
-    genai.configure(api_key="<GEMINI_API_KEY>")
-    generation_config = {
-        "temperature": 1,
-        "top_p": 0.95,
-        "top_k": 40,
-        "max_output_tokens": 8192,
-        "response_mime_type": "text/plain",
-    }
-    gemini_model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        generation_config=generation_config,
-    )
-
     # Function to classify text and display result
     def classify_text(text):
         input_vectorized = vectorizer.transform([text])
         prediction_proba = model.predict_proba(input_vectorized)
-    
+
         issue_labels = model.classes_
         proba_df = pd.DataFrame(prediction_proba, columns=issue_labels).T
         proba_df.columns = ['Probability']
-    
+
         top_issue = proba_df['Probability'].idxmax()
         top_probability = proba_df['Probability'].max()
-    
+
         st.write(f"The most likely mental health concern is: {top_issue} with a probability of {top_probability:.2%}")
-    
-        # Call the Gemini model to get well-being insights
+
         get_wellbeing_insight(text, top_issue)
     \end{lstlisting}
 \end{tcolorbox}
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Text Classification and Wellbeing Insight]
+\noindent
+This function, \texttt{classify\_text}, is used to classify a given text and display the most likely mental health concern along with its probability. The function first vectorizes the input \texttt{text} using the \texttt{vectorizer.transform()} method, which converts the text into a format suitable for the machine learning model. The \texttt{model.predict\_proba()} method is then called to get the probabilities for each possible class label, which represents different mental health issues. The class labels (issues) are retrieved using \texttt{model.classes\_}, and a Pandas DataFrame (\texttt{proba\_df}) is created to display the predicted probabilities for each issue. The DataFrame is transposed and renamed to give a clearer view, with a column for the probability values. The function then identifies the issue with the highest probability using \texttt{idxmax()} and retrieves the maximum probability value using \texttt{max()}. Finally, the most likely issue and its associated probability are displayed on the Streamlit app using \texttt{st.write()}. Additionally, the function calls \texttt{get\_wellbeing\_insight}, passing the text and the top issue, likely to generate further insights into the mental health concern identified. This function is integral to classifying text data for mental health analysis and providing actionable insights based on the results.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Getting Wellbeing Insights from Gemini Model]
     \begin{lstlisting}[language=Python]
-    # Function to get well-being insights from Gemini model
+    # Function to get wellbeing insights from Gemini model
     def get_wellbeing_insight(text, top_issue):
         try:
             chat_session = gemini_model.start_chat(history=[])
-            prompt = f"Analyze the following text for mental wellbeing insights related to {top_issue}: {text}. Based on this, provide practical advice or actions the user can take to reduce or improve {top_issue}. Be supportive and provide actionable suggestions."
+             prompt = f"<Prompt to get the well being based on Ryff Scale Six Factor Model>"
+    
             response = chat_session.send_message(prompt)
     
             st.write("### Wellbeing Insight:")
@@ -146,30 +175,225 @@ The above code fetches image posts from a Reddit user's submissions and extracts
         except Exception as e:
             st.write(f"Error retrieving wellbeing insights: {e}")
     \end{lstlisting}
-    \end{tcolorbox}
+\end{tcolorbox}
+
 \noindent
-The classify\_text function takes text input, vectorizes it using a pre-trained vectorizer, and predicts the most likely mental health issue. It also calls the Gemini model to provide wellbeing insights and advice.    
+The function \texttt{get\_wellbeing\_insight} interacts with the Gemini AI model to generate insights related to a mental health issue based on the Ryff Scale of Psychological Well-Being. The function starts by initializing a chat session with the Gemini model using \\
+\texttt{gemini\_model.start\_chat()}. It then constructs a detailed prompt that outlines the six factors of well-being: autonomy, environmental mastery, personal growth, positive relations with others, purpose in life, and self-acceptance. These factors are crucial for evaluating an individual's psychological well-being. The prompt includes specific example statements related to each factor, offering context for how the mental health issue (\texttt{top\_issue}) might affect the individual in each area. The function sends this prompt to the Gemini model and retrieves the response, which provides detailed advice and reflections on how the issue impacts each well-being factor. The response includes short paragraphs for each of the six factors, analyzing the potential effects of the issue on the individual's ability to function in these areas. After receiving the response, the function uses Streamlit's \texttt{st.write()} method to display the wellbeing insights. In case of any errors, such as issues with the Gemini model or the chat session, an error message is displayed using \texttt{st.write()}. This function is valuable for generating personalized psychological insights and offering practical advice based on the impact of a specific mental health issue.
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Main Streamlit Application Logic]
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Extract Text from Image Using Tesseract]
     \begin{lstlisting}[language=Python]
-        # Define the Streamlit app
-        def run_app():
-            st.title("Mental Health Classifier App")
-        
-            # Option to choose functionality
-            option = st.sidebar.selectbox(
-                "Choose an option",
-                ["Text Input", "Image Upload", "Reddit Username Analysis"]
-            )
-        \end{lstlisting}
-    \end{tcolorbox}
-    \noindent
-    There are options to predict only text, predict only image or input a reddit username. The username would be used along with PRAW to extract the top 20 texts and 20 images from the recent posts. This extracted data would then be used further for mental health classification. Also Gemini AI would help in mapping this mental health issue with probable mental wellbeing.
+    # Function to extract text from image using Tesseract
+    def extract_text_from_image(image):
+        extracted_text = pytesseract.image_to_string(image)
+        return extracted_text.splitlines()
 
-    \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Main Streamlit Application Logic]
-        \begin{lstlisting}[language=Python]
+    # Function to extract text from an image using Tesseract
+    def extract_text_from_image_video(image):
+        extracted_text = pytesseract.image_to_string(image)
+        return extracted_text if extracted_text else ""  # Return empty string if no text is found
+    \end{lstlisting}
+\end{tcolorbox}
 
-    # 1. Text Input
+\noindent
+The provided code consists of two functions designed to extract text from an image using the Tesseract OCR (Optical Character Recognition) engine. \\
+The first function, \texttt{extract\_text\_from\_image(image)}, takes an image object as input, applies the \texttt{pytesseract.image\_to\_string(image)} method to extract text from the image, and then splits the resulting text into individual lines using the \texttt{splitlines()} method. This allows the function to return a list where each element corresponds to a line of extracted text, making it easier to handle multiline results. The second function, \\ \texttt{extract\_text\_from\_image\_video(image)}, operates similarly by extracting text from the image, but it includes an additional check to determine whether any text was successfully extracted. If no text is found, the function returns an empty string (\texttt{""}), ensuring that it always returns a consistent type rather than \texttt{None}, which could potentially cause issues in other parts of the code. Both functions rely on the \texttt{pytesseract} library, which is a Python wrapper for the open-source Tesseract OCR engine, to perform the text extraction. These functions are useful for extracting text from images, which can be helpful in various use cases such as document scanning, analyzing images with embedded text, or processing video frames to capture text content.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Extract Frames from Video File]
+    \begin{lstlisting}[language=Python]
+    # Function to extract 20 frames from a video file
+    def extract_frames(video_path, num_frames=20):
+        cap = cv2.VideoCapture(video_path)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        frames = []
+        frame_interval = total_frames // num_frames  # Calculate frame interval
+    \end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Extract Frames from Video File]
+    \begin{lstlisting}[language=Python]
+        for i in range(num_frames):
+            cap.set(cv2.CAP_PROP_POS_FRAMES, i * frame_interval)
+
+            ret, frame = cap.read()
+
+            if ret:
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frames.append(frame)
+
+        cap.release()
+        return frames
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The \texttt{extract\_frames(video\_path, num\_frames=20)} function extracts a specified number of frames from a given video file. The function uses the OpenCV library, specifically the \texttt{cv2.VideoCapture()} method, to load the video from the file path provided by the \texttt{video\_path} argument. First, it calculates the total number of frames in the video using \texttt{cap.get(cv2.CAP\_PROP\_FRAME\_COUNT)}. Next, it calculates the frame interval by dividing the total number of frames by the desired number of frames to be extracted (\texttt{num\_frames}). For each of the frames, the function sets the position of the video playback to a specific frame using \texttt{cap.set(cv2.CAP\_PROP\_POS\_FRAMES, i \texttt{*} frame\_interval)}. It then reads the frame, converts the color from BGR (Blue-Green-Red) to RGB using \texttt{cv2.cvtColor(frame, cv2.COLOR\_BGR2RGB)}, and appends the frame to a list. This process is repeated for the number of frames specified. Finally, the video capture object is released with \texttt{cap.release()}, and the list of frames is returned. This function can be useful in scenarios where frame extraction is needed from videos for further processing, such as image analysis, video summarization, or even object detection tasks.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Transcribe Audio from Video]
+    \begin{lstlisting}[language=Python]
+def transcribe_audio_from_video(video_file):
+    try:
+        # Save the uploaded video file to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_video_file:
+            temp_video_file.write(video_file.read())
+            temp_video_path = temp_video_file.name
+
+        audio_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
+    \end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Transcribe Audio from Video]
+    \begin{lstlisting}[language=Python]
+        # Extract audio from video using subprocess
+        subprocess.run(["ffmpeg", "-i", temp_video_path, "-q:a", "0", "-map", "a", audio_path, "-y"])
+        audio = AudioSegment.from_file(audio_path)
+
+        # Use Whisper to transcribe the audio
+        result = whisper_model.transcribe(audio_path)
+
+        # Get the transcribed text and translate if necessary
+        transcribed_text = result["text"]
+        translated_text = GoogleTranslator(source="auto", target="en").translate(transcribed_text)
+
+        # Clean up temporary files
+        os.remove(temp_video_path)
+        os.remove(audio_path)
+
+        return translated_text
+
+    except Exception as e:
+        # Display a user-friendly message if the video is too long or another error occurs
+        if "duration" in str(e).lower() or "length" in str(e).lower():
+            return "The video is too long to process. Please upload a shorter video."
+        else:
+            return f"An error occurred: {e}"
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The \texttt{transcribe\_audio\_from\_video(video\_file)} function processes a video file by first saving it to a temporary file on disk. It then extracts the audio using the \texttt{ffmpeg} command-line tool, saving the extracted audio as a WAV file. The extracted audio is processed using the Whisper model for transcription, which outputs the transcribed text. Additionally, the function utilizes the \texttt{GoogleTranslator} to translate the text into English if necessary. Temporary files created during processing are deleted to manage resources efficiently. In case of errors, the function returns a user-friendly message, especially handling scenarios where the video duration exceeds allowable limits. This function is useful for converting spoken content in videos to text for further processing.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Translate Text Using DeepL]
+    \begin{lstlisting}[language=Python]
+# Function to translate text using DeepL
+def translate_text(text, target_lang="en"):
+    try:
+        if text:
+            translated_text = GoogleTranslator(source="auto", target=target_lang).translate(text)
+            return translated_text
+        return ""  # Return empty string if text is empty or None
+    except Exception as e:
+        return f"Error translating text: {str(e)}"
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The \texttt{translate\_text(text, target\_lang="en")} function provides an interface to translate a given string of text into a specified target language, with English (\texttt{"en"}) set as the default. Using the \texttt{GoogleTranslator} library, the function automatically detects the source language (\texttt{source="auto"}) and translates the text to the desired target language. If the input text is empty or \texttt{None}, the function gracefully returns an empty string. In case of any errors during the translation process, such as network issues or invalid input, an error message containing the exception details is returned. This function is particularly useful for applications requiring multilingual support, enabling seamless translation of text between languages.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Extract Audio from Video File]
+    \begin{lstlisting}[language=Python]
+# Function to extract audio from a video file
+def extract_audio_from_video(video_path):
+    try:
+        # Generate a temporary audio file path
+        audio_path = tempfile.NamedTemporaryFile(delete=False, suffix=".wav").name
+
+        # Use FFmpeg to extract audio from video
+        subprocess.run(["ffmpeg", "-i", video_path, "-q:a", "0", "-map", "a", audio_path, "-y"])
+
+        # Return the path of the extracted audio
+        return audio_path
+
+    except Exception as e:
+        return f"Error extracting audio: {str(e)}"
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The \texttt{extract\_audio\_from\_video(video\_path)} function facilitates the extraction of audio content from a video file. It first generates a temporary file path with a \texttt{.wav} suffix to store the extracted audio. The function uses the \texttt{ffmpeg} command-line tool to process the video file specified by \texttt{video\_path}, extracting the audio stream with high quality (\texttt{-q:a 0}) and saving it to the temporary file. The path to the extracted audio file is returned for further use. In the event of an error, such as invalid file paths or processing issues, the function catches the exception and returns a descriptive error message. This function is useful in multimedia applications where the separation of audio from video content is needed, such as transcription or audio analysis workflows.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Analyze Audio Mood Based on Extracted Audio]
+    \begin{lstlisting}[language=Python]
+# Function to analyze audio mood based on extracted audio
+def analyze_audio_mood(video_path):
+    try:
+        # Extract audio from the video (assuming extract_audio_from_video is implemented)
+        audio_path = extract_audio_from_video(video_path)
+
+        # Load the audio file using librosa
+        y, sr = librosa.load(audio_path)
+
+        # Extract MFCCs (Mel-frequency cepstral coefficients) from the audio signal
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=13)
+
+        # Divide the MFCC array into 4 frequency bands and calculate scalar mean for each band
+
+        # Low Frequencies: MFCC 0, 1, 2
+        low_freq_mfcc = np.mean(mfcc[0:3], axis=1)
+        mean_low = np.mean(low_freq_mfcc)  # Scalar mean for low frequencies
+
+        # Mid-Low Frequencies: MFCC 3, 4
+        mid_low_freq_mfcc = np.mean(mfcc[3:5], axis=1)
+        mean_mid_low = np.mean(mid_low_freq_mfcc)  # Scalar mean for mid-low frequencies
+
+        # Mid-High Frequencies: MFCC 5, 6, 7
+        mid_high_freq_mfcc = np.mean(mfcc[5:8], axis=1)
+        mean_mid_high = np.mean(mid_high_freq_mfcc)  # Scalar mean for mid-high frequencies
+
+        # High Frequencies: MFCC 8, 9, 10, 11, 12
+        high_freq_mfcc = np.mean(mfcc[8:13], axis=1)
+        mean_high = np.mean(high_freq_mfcc)  # Scalar mean for high frequencies
+    \end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Analyze Audio Mood Based on Extracted Audio]
+    \begin{lstlisting}[language=Python]
+        # Now use these scalar means for classification
+
+        if mean_high <= mean_low and mean_high <= mean_mid_low and mean_high <= mean_mid_high:
+            return "Audio sounds normal, with no dominant emotion detected"
+
+        elif mean_mid_high <= mean_low and mean_mid_high <= mean_mid_low and mean_mid_high <= mean_high:
+            return "Audio sounds neutral, calm, or peaceful"
+
+        elif mean_mid_low <= mean_low and mean_mid_low <= mean_mid_high and mean_mid_low <= mean_high:
+            return "Audio sounds slightly melancholic or neutral"
+
+        elif mean_low <= mean_mid_low and mean_low <= mean_mid_high and mean_low <= mean_high:
+            return "Audio sounds calm or melancholic, with less intensity"
+
+        elif mean_high > mean_low and mean_high > mean_mid_low and mean_high <= mean_mid_high:
+            return "Audio sounds depressive or anxious in nature"
+
+        else :
+            return "Audio sounds upbeat and energetic (Happy)"
+
+    except Exception as e:
+        return f"Error analyzing audio mood: {str(e)}"
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The \texttt{analyze\_audio\_mood(video\_path)} function determines the mood of an audio segment extracted from a given video file. It begins by extracting audio using the \\ \texttt{extract\_audio\_from\_video} function and loading the audio file with \texttt{librosa}. The function computes Mel-frequency cepstral coefficients (MFCCs), which are features widely used in audio signal processing for mood or emotion analysis. The MFCCs are divided into four frequency bands (low, mid-low, mid-high, high), and scalar means are computed for each band. Based on these scalar values, a series of conditions classify the mood as normal, neutral, melancholic, calm, depressive, or upbeat. In case of an exception, an error message with details is returned. This function can be utilized in applications such as multimedia content analysis, emotion recognition, or mood-based music recommendations.
+
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Streamlit Mental Health Disorder Detection App]
+    \begin{lstlisting}[language=Python]
+# Define the Streamlit app
+def run_app():
+    st.title("Mental Health Disorder Detection")
+
+    option = st.sidebar.selectbox(
+        "Choose an option",
+        ["Text Input", "Image Upload", "Video Upload", "Reddit Username Analysis"]
+    )
+
+    # Text Input
     if option == "Text Input":
         st.subheader("Enter Text to Classify Mental Health Issue")
         input_text = st.text_area("Enter your text here:")
@@ -178,15 +402,12 @@ The classify\_text function takes text input, vectorizes it using a pre-trained 
             if input_text.strip() == "":
                 st.write("Please enter some text to classify.")
             else:
-                # Translate if not in English
                 translated_text = GoogleTranslator(source='auto', target='en').translate(input_text)
                 st.write("Translated Text (to English):")
                 st.write(translated_text)
-
-                # Classify and display result
                 classify_text(translated_text)
 
-    # 2. Image Upload
+    # Image Upload
     elif option == "Image Upload":
         st.subheader("Upload an Image to Extract and Classify Text")
         uploaded_image = st.file_uploader("Upload an Image", type=["jpg", "jpeg", "png", "webp", "bmp", "tiff"])
@@ -195,158 +416,164 @@ The classify\_text function takes text input, vectorizes it using a pre-trained 
             image = Image.open(uploaded_image)
             st.image(image, caption="Uploaded Image", use_column_width=True)
 
-            # Extract text from image
             extracted_text = extract_text_from_image(image)
-            extracted_text = "\n".join(extracted_text)
+            translated_text = GoogleTranslator(source='auto', target='en').translate("\n".join(extracted_text))
 
-            st.subheader("Extracted Text")
-            st.text(extracted_text)
-        
-            # Translate text to English if needed
-            translated_text = GoogleTranslator(source='auto', target='en').translate(extracted_text)
             st.subheader("Translated Text (to English)")
             st.text(translated_text)
         \end{lstlisting}
     \end{tcolorbox}
-
-    \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Main Streamlit Application Logic]
+    \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Streamlit Mental Health Disorder Detection App]
         \begin{lstlisting}[language=Python]
-        if st.button("Classify Extracted Text"):
-            classify_text(translated_text)
-        
-        # 3. Reddit Username Analysis
-        elif option == "Reddit Username Analysis":
-            st.subheader("Enter Reddit Username for Analysis")
-            username = st.text_input("Enter Reddit username:")
-        
-            if st.button("Analyze"):
-                if username.strip() == "":
-                    st.write("Please enter a Reddit username.")
+            if st.button("Classify Extracted Text"):
+                if not translated_text or translated_text.strip() == "":
+                    st.write("It is normal with probability 100%")
                 else:
-                    # Fetch and display text posts
-                    text_posts = fetch_user_text_posts(username)
-                    if text_posts:
-                        st.write("Recent Text Posts:")
-                        st.write(text_posts[:3])  # Display a few posts for review
-        
-                    # Fetch and display image-based posts with extracted text
-                    image_texts = fetch_user_images_and_extract_text(username)
+                    classify_text(translated_text)
 
-            # Combine text from both text posts and image text
+    # Video Upload
+    elif option == "Video Upload":
+        st.subheader("Upload a Video to Extract and Classify Text")
+        video_file = st.file_uploader("Choose a video file", type=["mp4", "mov", "avi"])
+
+        if video_file:
+            video_path = "/tmp/uploaded_video.mp4"
+            with open(video_path, "wb") as f:
+                f.write(video_file.getbuffer())
+
+            st.video(video_file)
+
+            frames = extract_frames(video_path)
+            combined_text = ""
+
+            st.write("Extracting frames from video ...")
+            for idx, frame in enumerate(frames):
+                st.image(frame, caption=f"Frame {idx + 1}", use_column_width=True)
+                text_from_frame = extract_text_from_image_video(frame)
+                if text_from_frame and text_from_frame not in combined_text:
+                    combined_text += text_from_frame + " "
+
+            st.write("Text Extracted from Video Frames:")
+            st.text(combined_text)
+
+            transcribed_audio_text = transcribe_audio_from_video(video_file)
+            st.write("Transcribed Audio Text:")
+            st.text(transcribed_audio_text)
+
+            full_combined_text = combined_text + " " + transcribed_audio_text
+            translated_combined_text = translate_text(full_combined_text)
+        \end{lstlisting}
+    \end{tcolorbox}
+    \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Streamlit Mental Health Disorder Detection App]
+        \begin{lstlisting}[language=Python]
+            st.write("Translated Combined Text (Frames + Audio):")
+            st.text(translated_combined_text)
+
+            st.write("Analyzing Audio Mood...")
+            mood_result = analyze_audio_mood(video_path)
+            st.write(mood_result)
+
+            if st.button("Classify Extracted Text"):
+                classify_text(translated_combined_text)
+
+    # Reddit Username Analysis
+    elif option == "Reddit Username Analysis":
+        st.subheader("Enter Reddit Username for Analysis")
+        username = st.text_input("Enter Reddit username:")
+
+        if st.button("Analyze"):
+            text_posts = fetch_user_text_posts(username)
+            image_texts = fetch_user_images_and_extract_text(username)
+
             all_text = text_posts + image_texts
             if all_text:
-                predictions = []
-                for text in all_text:
-                    # Vectorize and classify each post
-                    input_vectorized = vectorizer.transform([text])
-                    prediction = model.predict(input_vectorized)
-                    predictions.append(prediction[0])
-            
-            # Count the most common mental health issue
-            issue_counts = Counter(predictions)
-            top_issue, top_count = issue_counts.most_common(1)[0]
-            top_percentage = (top_count / len(predictions)) * 100
-                \end{lstlisting}
-            \end{tcolorbox}
+                predictions = [model.predict(vectorizer.transform([text]))[0] for text in all_text]
+                issue_counts = Counter(predictions)
+                top_issue, top_count = issue_counts.most_common(1)[0]
+                st.write(f"The most frequent issue: {top_issue} ({(top_count / len(predictions)) * 100:.2f}%)")
+                issue_distribution = pd.DataFrame(issue_counts.items(), columns=['Mental Health Issue', 'Count'])
+                st.write("Mental health issue distribution across posts:")
+                st.write(issue_distribution)
 
-        \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Main Streamlit Application Logic]
-            \begin{lstlisting}[language=Python]
-            st.write(f"The most frequently detected mental health concern is: {top_issue} appearing in {top_percentage:.2f}% of analyzed text.")
-            issue_distribution = pd.DataFrame(issue_counts.items(), columns=['Mental Health Issue', 'Count'])
-            st.write("Mental health issue distribution across posts:")
-            st.write(issue_distribution)
-
-            # Call the Gemini model to get well-being insights
-            get_wellbeing_insight(" ".join(all_text), top_issue)
-        else:
-            st.write("No valid text found for analysis.")
-    
-    # Run the app
-    if __name__ == '__main__':
-        run_app()
+                # Call the Gemini model to get well-being insights
+                get_wellbeing_insight(" ".join(all_text), top_issue)
+            else:
+                st.write("No valid text found for analysis.")
+# Run the app
+if __name__ == '__main__':
+    run_app()
     \end{lstlisting}
-    \end{tcolorbox}
-                
-\noindent
-This section defines the main structure of the Streamlit app, providing options for users to input text, upload images, or analyze Reddit usernames. Each option triggers different functionalities like text classification, image-based text extraction, and Reddit post analysis.    
-\newline
-\newline
-\noindent
-The main logic of the Streamlit application focuses on text and image classification for mental health issues, alongside an analysis of Reddit posts. The application offers three primary features: text input, image upload, and Reddit username analysis. For text input, users can enter text which is automatically translated into English if needed. The translated text is then passed to a classifier, which determines the most probable mental health concern based on the content. If the user uploads an image, the application extracts text from the image using OCR (Optical Character Recognition), translates it to English if necessary, and then classifies the extracted text. The Reddit username analysis feature allows users to input a Reddit username. The application fetches the most recent posts by the user, classifies both text-based and image-based posts, and then aggregates the results to identify the most frequent mental health issue discussed. If both text and image data are available, the application analyzes all content, classifies the posts, and provides insights into the most commonly detected issue. It also visualizes the distribution of detected issues and uses the Gemini AI model to provide well-being advice and actionable steps for users. The code integrates multiple components including the `GoogleTranslator` for text translation, Tesseract for image text extraction, and a pre-trained logistic regression model to classify text data. Additionally, it uses the Gemini API to generate well-being insights based on the classified mental health concerns.
+\end{tcolorbox}
 
-\begin{figure}[h!]  
-    \centering
-    \includegraphics[width=1.0\textwidth]{Images/Sequence Diagram.png}  
-    \caption{Application Sequence Diagram}
-    \label{SequenceD}  % Label for referencing the figure
-\end{figure}
+\noindent
+The \texttt{run\_app()} function defines a Streamlit application to detect mental health disorders using multiple input methods: text input, image upload, video upload, and Reddit username analysis. Users can interact with a sidebar to choose their preferred mode of input. Each mode processes the data accordingly, utilizing pre-defined helper functions for text translation, text extraction from images, audio transcription, and Reddit user data retrieval. Depending on the mode, the app combines extracted and processed data to classify mental health concerns or display insights. It leverages libraries like \texttt{GoogleTranslator}, \texttt{librosa}, and \texttt{FFmpeg} for processing and analysis. The results include mood analysis, classification probabilities, and potential mental health issues. This app provides a comprehensive tool for mental health-related data analysis. 
 
+\vspace{1em}
 \noindent
 Below are some screenshots from the web application.
-
-\pagebreak
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{App Images/01 Interface.png}  
-    \caption{01 Website with all options}
+    \caption{Website with all options}
     \label{01i}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{App Images/02 Interface.png}  
-    \caption{02 Entering Text for classification}
+    \caption{Entering Text for classification}
     \label{02i}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{App Images/03 Interface.png}  
-    \caption{03 Text Classification Result}
+    \caption{Text Classification Result}
     \label{03i}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{App Images/04 Interface.png}  
-    \caption{04 Image Classification}
+    \caption{Upload Image}
     \label{04i}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=1.0\textwidth]{App Images/05 Interface.png}  
-    \caption{05 Extracted Text from Image}
+    \includegraphics[width=0.9\textwidth]{App Images/05 Interface.png}  
+    \caption{Image Classification Result}
     \label{05i}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=1.0\textwidth]{App Images/06 Interface.png}  
-    \caption{06 Image Classification Result}
-    \label{06i}  % Label for referencing the figure
+    \includegraphics[width=1.0\textwidth]{App Images/12 Interface.png}  
+    \caption{Upload Video}
+    \label{06i4}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.9\textwidth]{App Images/07 Interface.png}  
-    \caption{07 Reddit User Analysis}
+    \includegraphics[width=1.0\textwidth]{App Images/13 Interface.png}  
+    \caption{Video Classification Result}
+    \label{06i}  % Label for referencing the figure
+\end{figure}
+
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{App Images/06 Interface.png}  
+    \caption{Reddit User Analysis}
     \label{07i}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.9\textwidth]{App Images/08 Interface.png}  
-    \caption{08 Posts from user profile}
+    \includegraphics[width=0.9\textwidth]{App Images/07 Interface.png}  
+    \caption{Result from Post Analysis}
     \label{08i}  % Label for referencing the figure
-\end{figure}
-
-\begin{figure}[h!]  
-    \centering
-    \includegraphics[width=1.0\textwidth]{App Images/09 Interface.png}  
-    \caption{09 User profile Classification Result}
-    \label{09i}  % Label for referencing the figure
 \end{figure}
 
 
