@@ -1,5 +1,7 @@
 % --------------------------- Implementation ---------------------------------
 
+\pagebreak
+
 \section{Implementation}
 \subsection{Features From RM}
 \noindent
@@ -660,5 +662,321 @@ This code demonstrates how to apply a Long Short-Term Memory (LSTM) neural netwo
     \caption{Loss v/s Epoch}
     \label{Loss vs Epoch LSTM}  % Label for referencing the figure
 \end{figure}
+
+
+\subsubsection{Hyperparamter Tuning Using RandomizedSearchCV}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Logistic Regression]
+\begin{lstlisting}[language=Python]
+import pandas as pd
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load the preprocessed dataset
+dataset = pd.read_csv('preprocessed_mental_health.csv')
+
+# Check if 'cleaned_text' and 'mental_health_issue' columns exist
+if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+    raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Logistic Regression]
+    \begin{lstlisting}[language=Python]
+# Remove rows with missing values in 'cleaned_text' column
+dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+# Initialize the CountVectorizer and fit/transform the cleaned text
+HPLRvectorizer = CountVectorizer()
+X = HPLRvectorizer.fit_transform(dataset['cleaned_text'])
+
+# Prepare the target variable
+y = dataset['mental_health_issue']
+
+# Split the dataset into Training and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the Logistic Regression model
+HPLRmodel = LogisticRegression(max_iter=200)
+
+# Define the hyperparameter grid for Randomized Search
+param_distributions = {
+    'C': [0.001, 0.01, 0.1, 1, 10, 100],       # Inverse of regularization strength
+    'penalty': ['l1', 'l2', 'elasticnet', 'none'],  # Regularization types
+    'solver': ['liblinear', 'saga']             # Solvers that support l1, elasticnet
+}
+
+# Initialize RandomizedSearchCV
+random_search = RandomizedSearchCV(estimator=HPLRmodel, param_distributions=param_distributions,
+                                   n_iter=10, scoring='accuracy', cv=5, n_jobs=-1, random_state=42)
+
+# Fit RandomizedSearchCV
+random_search.fit(X_train, y_train)
+
+# Best hyperparameters from Random Search
+print("Best Hyperparameters:", random_search.best_params_)
+
+# Best model from Random Search
+best_modelLR = random_search.best_estimator_
+
+# Make predictions using the best model
+y_pred = best_modelLR.predict(X_test)
+
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Logistic Regression]
+    \begin{lstlisting}[language=Python]
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Print classification report
+print("Classification Report:\n", classification_report(y_test, y_pred))
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The above code demonstrates a machine learning workflow for classifying mental health issues using \texttt{LogisticRegression} with hyperparameter tuning. The dataset is loaded using \texttt{pandas}, and a check ensures the presence of \texttt{'cleaned\_text'} and \texttt{'mental\_health\_issue'} columns. Missing values in \texttt{'cleaned\_text'} are dropped to prevent processing errors. The textual data is transformed into a numerical format using \texttt{CountVectorizer}, which converts text into a bag-of-words representation. The dataset is then split into training and testing sets using \texttt{train\_test\_split}. A logistic regression model is initialized, and the hyperparameter grid is defined, including parameters like \texttt{C} (inverse of regularization strength), \texttt{penalty}, and \texttt{solver}. Hyperparameter tuning is performed using \texttt{RandomizedSearchCV}, which searches for the best model configuration by sampling parameter combinations. The best model is used to make predictions on the test set, and evaluation metrics such as accuracy and a classification report are printed. This approach ensures optimal model performance and generalization to new data.
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=K Nearest Neighbours]
+    \begin{lstlisting}[language=Python]
+import pandas as pd
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Load the preprocessed dataset
+dataset = pd.read_csv('preprocessed_mental_health.csv')
+# Check if 'cleaned_text' and 'mental_health_issue' columns exist
+if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+    raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=K Nearest Neighbours]
+    \begin{lstlisting}[language=Python]
+# Remove rows with missing values in 'cleaned_text' column
+dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+# Initialize the CountVectorizer and fit/transform the cleaned text
+HPTKNNvectorizer = CountVectorizer()
+X = HPTKNNvectorizer.fit_transform(dataset['cleaned_text'])
+
+# Prepare the target variable
+y = dataset['mental_health_issue']
+
+# Split the dataset into Training and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the k-NN classifier
+knn = KNeighborsClassifier()
+
+# Define the hyperparameter grid for Randomized Search
+param_distributions = {
+    'n_neighbors': [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 14, 15, 16, 17, 18, 19, 20],
+        # Different values for number of neighbors
+    'metric': ['euclidean', 'manhattan', 'chebyshev', 'minkowski'],  # Different distance metrics
+    'weights': ['uniform', 'distance']  # Weighing options for neighbors
+}
+
+# Initialize RandomizedSearchCV
+random_search = RandomizedSearchCV(estimator=knn, param_distributions=param_distributions,
+                                    n_iter=10, scoring='accuracy', cv=5, n_jobs=-1, random_state=42)
+
+# Fit RandomizedSearchCV
+random_search.fit(X_train, y_train)
+
+# Best hyperparameters from Random Search
+print("Best Hyperparameters:", random_search.best_params_)
+
+# Best model from Random Search
+best_knn = random_search.best_estimator_
+
+# Make predictions using the best model
+y_pred = best_knn.predict(X_test)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=K Nearest Neighbours]
+    \begin{lstlisting}[language=Python]
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Print classification report
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Print confusion matrix
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code implements a k-Nearest Neighbors (k-NN) classifier for classifying mental health issues from text data using hyperparameter tuning via RandomizedSearchCV. First, it loads a preprocessed dataset, ensuring the existence of critical columns, \texttt{cleaned\_text} (features) and \texttt{mental\_health\_issue} (target). Rows with missing values in the \texttt{cleaned\_text} column are removed to maintain data integrity. The text is vectorized into numerical format using \texttt{CountVectorizer}, converting text into a bag-of-words model. The features (\(X\)) and target (\(y\)) are split into training (80\%) and test (20\%) datasets to ensure proper model evaluation. The k-NN model is initialized without predefined parameters, and a hyperparameter grid is defined for tuning. This grid explores various values for the number of neighbors (\texttt{n\_neighbors}), distance metrics (\texttt{metric}), and neighbor weighting options (\texttt{weights}). \texttt{RandomizedSearchCV} is then used to optimize these parameters by training multiple k-NN models with combinations from the grid, evaluating them with 5-fold cross-validation, and scoring based on accuracy. The best combination of hyperparameters is identified and used to configure the final k-NN model. The model is then tested on unseen data (test set), and its performance is evaluated by calculating the accuracy, a classification report detailing precision, recall, F1-score for each class, and a confusion matrix showing true vs. predicted classifications. This approach balances computational efficiency with robustness, enabling the selection of an optimized k-NN model for mental health classification.
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Support Vector Machine]
+    \begin{lstlisting}[language=Python]
+import pandas as pd
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, classification_report
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Support Vector Machine]
+    \begin{lstlisting}[language=Python]
+# Load the preprocessed dataset
+dataset = pd.read_csv('preprocessed_mental_health.csv')
+
+# Check if 'cleaned_text' and 'mental_health_issue' columns exist
+if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+    raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+
+# Remove rows with missing values in 'cleaned_text' column
+dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+# Initialize the CountVectorizer and fit/transform the cleaned text
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(dataset['cleaned_text'])
+
+# Prepare the target variable
+y = dataset['mental_health_issue']
+
+# Split the dataset into Training and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the SVC model
+model = SVC()
+
+# Define the hyperparameter grid for Randomized Search
+param_distributions = {
+    'C': [0.1, 1, 10, 100],               # Regularization parameter
+    'kernel': ['linear', 'rbf', 'poly'],  # Kernel types
+    'gamma': ['scale', 'auto', 0.1, 1],   # Kernel coefficient for 'rbf', 'poly', and 'sigmoid'
+}
+
+# Initialize RandomizedSearchCV
+random_search = RandomizedSearchCV(estimator=model, param_distributions=param_distributions,
+                                    n_iter=10, scoring='accuracy', cv=5, n_jobs=-1, random_state=42)
+
+# Fit RandomizedSearchCV
+random_search.fit(X_train, y_train)
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Support Vector Machine]
+    \begin{lstlisting}[language=Python]
+# Best hyperparameters from Random Search
+print("Best Hyperparameters:", random_search.best_params_)
+
+# Best model from Random Search
+best_model = random_search.best_estimator_
+
+# Make predictions using the best model
+y_pred = best_model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Print classification report
+print("Classification Report:\n", classification_report(y_test, y_pred))
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code implements a Support Vector Classifier (SVC) for classifying mental health issues from text data using hyperparameter tuning via RandomizedSearchCV. It begins by loading a preprocessed dataset and ensuring that essential columns, \texttt{cleaned\_text} (features) and \texttt{mental\_health\_issue} (target), are present. Any rows with missing values in the \texttt{cleaned\_text} column are removed to ensure clean data. The text is then vectorized into a numerical format using \texttt{CountVectorizer}, transforming it into a bag-of-words representation. The features (\(X\)) and target (\(y\)) are split into training (80\%) and test (20\%) sets for model validation. The SVC model is initialized without predefined hyperparameters, and a hyperparameter grid is defined for tuning. This grid includes different values for the regularization parameter (\texttt{C}), kernel types (\texttt{kernel}), and the kernel coefficient (\texttt{gamma}). \texttt{RandomizedSearchCV} is employed to find the best combination of these parameters by evaluating multiple models with various hyperparameter combinations through 5-fold cross-validation, using accuracy as the scoring metric. The best set of hyperparameters is selected to configure the final SVC model. The model is then evaluated on the test set by making predictions, and its performance is measured by calculating the accuracy, as well as generating a classification report that includes precision, recall, and F1-score for each class. This approach ensures the selection of the most optimized SVC model for the classification of mental health issues from text data.
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Naive Bayes]
+    \begin{lstlisting}[language=Python]
+import pandas as pd
+from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from scipy.stats import uniform
+
+# Load the preprocessed dataset
+dataset = pd.read_csv('preprocessed_mental_health.csv')
+
+# Check if 'cleaned_text' and 'mental_health_issue' columns exist
+if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+    raise ValueError("The dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+
+# Remove rows with missing values in 'cleaned_text' column
+dataset.dropna(subset=['cleaned_text'], inplace=True)
+
+# Initialize the CountVectorizer and fit/transform the cleaned text
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(dataset['cleaned_text'])
+
+# Prepare the target variable
+y = dataset['mental_health_issue']
+
+# Split the dataset into Training and Test Sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Initialize the Naive Bayes model
+naive_bayes_model = MultinomialNB()
+
+# Define the parameter distribution for Randomized Search
+param_distributions = {
+    'alpha': uniform(0.001, 5.0)  # Sampling alpha from a uniform distribution
+}
+\end{lstlisting}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Naive Bayes]
+    \begin{lstlisting}[language=Python]
+# Initialize RandomizedSearchCV
+random_search = RandomizedSearchCV(estimator=naive_bayes_model, param_distributions=param_distributions,
+                                    n_iter=10, scoring='accuracy', cv=5, n_jobs=-1, random_state=42)
+
+# Fit RandomizedSearchCV
+random_search.fit(X_train, y_train)
+
+# Best hyperparameters from Random Search
+print("Best Hyperparameters:", random_search.best_params_)
+
+# Best model from Random Search
+best_model = random_search.best_estimator_
+
+# Make predictions using the best model
+y_pred = best_model.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy * 100:.2f}%')
+
+# Print classification report
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Print confusion matrix
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))        
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code implements a Naive Bayes classifier using the MultinomialNB algorithm to classify mental health issues from text data, with hyperparameter tuning via RandomizedSearchCV. The dataset is first loaded, ensuring the required columns, \texttt{cleaned\_text} (features) and \texttt{mental\_health\_issue} (target), exist. Rows with missing values in the \texttt{cleaned\_text} column are removed to maintain data quality. The text is vectorized using \texttt{CountVectorizer}, converting it into a bag-of-words representation. The features (\(X\)) and target (\(y\)) are then split into training (80\%) and test (20\%) sets to facilitate proper evaluation. The Naive Bayes model is initialized, and a parameter distribution for \texttt{alpha} is defined using a uniform distribution, sampling values between 0.001 and 5.0. \texttt{RandomizedSearchCV} is utilized to explore different values for \texttt{alpha} over 10 iterations, using 5-fold cross-validation and accuracy as the scoring metric. The best hyperparameters are identified and used to configure the final Naive Bayes model. The model is then tested on the unseen data (test set).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 % ------------------------- Implementation Ends -----------------------------

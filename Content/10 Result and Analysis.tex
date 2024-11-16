@@ -1,6 +1,6 @@
 % -------------------- Result and Analysis ----------------------------------
 
-\pagebreak
+
 
 \section{Results and Analysis}
 %Prepare the test plans in tabular format, where each Test Case should be represented with distinct id, prefixed with “$\langle$module$\rangle$ “, where module represents the short code of the respective design module. Test Case numbers should be matching as stated in Requirement Matrix.
@@ -114,18 +114,19 @@ The Logistic Regression model performed well with an overall accuracy of 87.66\%
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.8\textwidth]{Images/LR Confusion Matrix.png}  
+    \includegraphics[width=0.9\textwidth]{Images/LR Confusion Matrix.png}  
     \caption{Confusion Matrix (Logistic Regression)}
     \label{LRCM}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.85\textwidth]{Images/LR ROC.png}  
+    \includegraphics[width=0.9\textwidth]{Images/LR ROC.png}  
     \caption{ROC AUC (Logistic Regression)}
     \label{LRROC}  % Label for referencing the figure
 \end{figure}
 
+\pagebreak
 
 \subsection{Results of Naive Bayes}
 
@@ -161,7 +162,7 @@ The Logistic Regression model performed well with an overall accuracy of 87.66\%
 \end{center}
 
 \vspace{0.25em}
-\pagebreak
+
 \begin{center}
     \textbf{ROC Curve Areas for Each Class} \\[0.5em]
     \begin{tabular}{|l|c|}
@@ -322,15 +323,17 @@ The Support Vector Machine (SVM) model achieved an accuracy of 85.13\%, demonstr
     \label{RFCM}  % Label for referencing the figure
 \end{figure}
 
-\noindent
-The Random Forest model achieved an accuracy of 86.00\%, indicating a strong performance in classifying the mental health conditions. The classification report shows that the Normal class achieved the highest recall (1.00) and a precision of 0.88, resulting in a high F1-score of 0.93. This reflects the model’s ability to correctly classify the majority of the Normal instances. The Bipolar class, however, shows a much lower recall (0.47), which indicates that the model has difficulty identifying instances of Bipolar disorder, as reflected by its F1-score of 0.62. The Anxiety and PTSD classes have relatively balanced performance, with moderate precision and recall values. The confusion matrix illustrates the distribution of misclassifications. The Normal class is correctly classified almost entirely (2173 true positives), while other classes like Bipolar and PTSD exhibit significant misclassifications, particularly Bipolar, which is often misclassified as Depression and Normal. The ROC AUC scores for all classes are quite high, indicating that the model is effective at distinguishing between the classes. The Anxiety, Depression, Normal, and PTSD classes each have AUC values above 0.96, with the Normal and Depression classes achieving 0.97. Bipolar has the lowest AUC at 0.89, which corresponds to its lower classification performance. These AUC values suggest that the Random Forest model is proficient in distinguishing between most of the classes, though it faces challenges in identifying Bipolar disorder.
-
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=0.7\textwidth]{Images/RF ROC.png}  
     \caption{ROC AUC (Random Forest)}
     \label{RFROC}  % Label for referencing the figure
 \end{figure}
+
+\noindent
+The Random Forest model achieved an accuracy of 86.00\%, indicating a strong performance in classifying the mental health conditions. The classification report shows that the Normal class achieved the highest recall (1.00) and a precision of 0.88, resulting in a high F1-score of 0.93. This reflects the model’s ability to correctly classify the majority of the Normal instances. The Bipolar class, however, shows a much lower recall (0.47), which indicates that the model has difficulty identifying instances of Bipolar disorder, as reflected by its F1-score of 0.62. The Anxiety and PTSD classes have relatively balanced performance, with moderate precision and recall values. The confusion matrix illustrates the distribution of misclassifications. The Normal class is correctly classified almost entirely (2173 true positives), while other classes like Bipolar and PTSD exhibit significant misclassifications, particularly Bipolar, which is often misclassified as Depression and Normal. The ROC AUC scores for all classes are quite high, indicating that the model is effective at distinguishing between the classes. The Anxiety, Depression, Normal, and PTSD classes each have AUC values above 0.96, with the Normal and Depression classes achieving 0.97. Bipolar has the lowest AUC at 0.89, which corresponds to its lower classification performance. These AUC values suggest that the Random Forest model is proficient in distinguishing between most of the classes, though it faces challenges in identifying Bipolar disorder.
+
+
 
 
 \subsection{Results of XGBoost}
@@ -463,7 +466,7 @@ The KNN model achieved an accuracy of 54.46\%, which is considerably lower than 
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.8\textwidth]{Images/KNN ROC.png}  
+    \includegraphics[width=0.85\textwidth]{Images/KNN ROC.png}  
     \caption{ROC AUC (KNN)}
     \label{KNnROC}  % Label for referencing the figure
 \end{figure}
@@ -504,7 +507,6 @@ The KNN model achieved an accuracy of 54.46\%, which is considerably lower than 
 \end{center}
 
 \vspace{0.25em}
-\pagebreak
 
 \begin{center}
     \textbf{ROC Curve Areas for Each Class} \\[0.5em]
@@ -541,5 +543,254 @@ The LSTM model achieved an accuracy of 83.55\%, indicating strong performance, a
 \pagebreak
 \noindent
 Among the various machine learning algorithms tested, Logistic Regression emerged as the best performing model. With an accuracy of 87.66\%, it outperformed the other models in terms of overall accuracy, precision, recall, and F1-score. The classification report for Logistic Regression shows strong performance across all classes, especially the 'Normal' class, which had high precision (0.92) and recall (0.99). Although the model faced challenges with the 'Bipolar' class, which had lower recall and F1-score, its overall ability to differentiate between other mental health conditions was impressive. The confusion matrix and ROC AUC scores further highlight the model’s robustness, with an AUC of 0.99 for the 'Normal' class and strong values for other classes as well. This indicates that Logistic Regression not only achieves high accuracy but also performs well in distinguishing between different mental health categories, making it the most reliable choice for this classification task.
+
+
+\subsection{Results of Hyperparameter Tuning}
+
+\begin{center}
+    \textbf{Hyperparameter Tuning on Logistic Regression} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Best Hyperparameters}  & \textbf{Value} \\ \hline
+        Solver                        & liblinear      \\ \hline
+        Penalty                       & l2             \\ \hline
+        C                              & 1              \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{Classification Report} \\[0.5em]
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Class}  & \textbf{Precision}  & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        Anxiety         & 0.83                & 0.77            & 0.80              & 379             \\ \hline
+        Bipolar         & 0.74                & 0.55            & 0.64              & 384             \\ \hline
+        Depression      & 0.76                & 0.76            & 0.76              & 373             \\ \hline
+        Normal          & 0.92                & 0.99            & 0.95              & 2183            \\ \hline
+        PTSD            & 0.87                & 0.77            & 0.82              & 394             \\ \hline
+        Accuracy        & 0.88                &                 &                   & 3713            \\ \hline
+        Macro avg       & 0.83                & 0.77            & 0.79              & 3713            \\ \hline
+        Weighted avg    & 0.87                & 0.88            & 0.87              & 3713            \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC Curve Areas for Each Class} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Class}  & \textbf{ROC AUC} \\ \hline
+        Anxiety         & 0.95            \\ \hline
+        Bipolar         & 0.92            \\ \hline
+        Depression      & 0.96            \\ \hline
+        Normal          & 0.99            \\ \hline
+        PTSD            & 0.95            \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+The results of hyperparameter tuning on the Logistic Regression model show that the best hyperparameters were a solver of \texttt{liblinear}, a penalty of \texttt{l2}, and a regularization parameter (\texttt{C}) of 1. The model achieved an overall accuracy of 87.72\%, with high performance across most classes. The classification report reveals that the model performs well on \texttt{normal} class with an accuracy of 92\% in predicting this class, whereas performance on \texttt{bipolar} is slightly lower \(64\% F1-score\). The ROC AUC scores indicate that the model is highly effective in distinguishing between different classes, with \texttt{normal} achieving a near-perfect AUC of 0.99, followed closely by \texttt{depression} at 0.96. These results suggest that the model is well-tuned, particularly for classes like \texttt{normal} and \texttt{anxiety}.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.7\textwidth]{Images/HP LR CM.png}  
+    \caption{Classification Matrix after Hyperparameter Tuning (Logistic Regression)}
+    \label{LSTMROC2}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.7\textwidth]{Images/HP LR ROC.png}  
+    \caption{ROC AUC after Hyperparamter Tuning (Logistic Regression)}
+    \label{LSTMROC3}  % Label for referencing the figure
+\end{figure}
+
+
+
+\begin{center}
+    \textbf{Hyperparameter Tuning on k-NN} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Best Hyperparameters}  & \textbf{Value} \\ \hline
+        Weights                       & distance       \\ \hline
+        n\_neighbors                  & 10             \\ \hline
+        Metric                        & euclidean      \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{Classification Report} \\[0.5em]
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Class}  & \textbf{Precision}  & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        Anxiety         & 0.73                & 0.23            & 0.35              & 379             \\ \hline
+        Bipolar         & 0.18                & 0.60            & 0.27              & 384             \\ \hline
+        Depression      & 0.47                & 0.40            & 0.43              & 373             \\ \hline
+        Normal          & 0.74                & 0.65            & 0.69              & 2183            \\ \hline
+        PTSD            & 0.83                & 0.10            & 0.18              & 394             \\ \hline
+        Accuracy        & 0.52                &                 &                   & 3713            \\ \hline
+        Macro avg       & 0.59                & 0.40            & 0.39              & 3713            \\ \hline
+        Weighted avg    & 0.66                & 0.52            & 0.53              & 3713            \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC Curve Areas for Each Class} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Class}  & \textbf{ROC AUC} \\ \hline
+        Anxiety         & 0.77            \\ \hline
+        Bipolar         & 0.67            \\ \hline
+        Depression      & 0.79            \\ \hline
+        Normal          & 0.79            \\ \hline
+        PTSD            & 0.71            \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+The results of hyperparameter tuning on the k-Nearest Neighbors (k-NN) model show that the best hyperparameters were \texttt{weights} set to \texttt{distance}, \texttt{n\_neighbors} set to 10, and \texttt{metric} set to \texttt{euclidean}. Despite these optimizations, the model achieved an overall accuracy of 52.03\%, which is relatively low. The classification report indicates that the model struggled to effectively predict the \texttt{anxiety} and \texttt{PTSD} classes, with particularly low recall values (0.23 and 0.10, respectively). However, it performed reasonably well on the \texttt{normal} class with an F1-score of 0.69. The ROC AUC scores reflect this by showing relatively poor performance for \texttt{bipolar} (0.67) and \texttt{PTSD} (0.71), while \texttt{normal} and \texttt{depression} had slightly better values at 0.79 each. These results suggest that k-NN is not the best model for this dataset, as it fails to consistently classify the minority classes effectively. 
+
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/HP KNN CM.png}  
+    \caption{Classification Matrix after Hyperparameter Tuning (KNN)}
+    \label{LSTMROC4}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/HP KNN ROC.png}  
+    \caption{ROC AUC after Hyperparameter Tuning (KNN)}
+    \label{LSTMROC5}  % Label for referencing the figure
+\end{figure}
+
+\pagebreak
+
+\begin{center}
+    \textbf{Hyperparameter Tuning on SVM} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Best Hyperparameters}  & \textbf{Value} \\ \hline
+        Kernel                        & linear         \\ \hline
+        Gamma                         & scale          \\ \hline
+        C                              & 1              \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{Classification Report} \\[0.5em]
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Class}  & \textbf{Precision}  & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        Anxiety         & 0.72                & 0.76            & 0.74              & 379             \\ \hline
+        Bipolar         & 0.62                & 0.61            & 0.61              & 384             \\ \hline
+        Depression      & 0.74                & 0.71            & 0.72              & 373             \\ \hline
+        Normal          & 0.94                & 0.95            & 0.95              & 2183            \\ \hline
+        PTSD            & 0.78                & 0.74            & 0.76              & 394             \\ \hline
+        Accuracy        & 0.85                &                 &                   & 3713            \\ \hline
+        Macro avg       & 0.76                & 0.75            & 0.76              & 3713            \\ \hline
+        Weighted avg    & 0.85                & 0.85            & 0.85              & 3713            \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC Curve Areas for Each Class} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Class}  & \textbf{ROC AUC} \\ \hline
+        Anxiety         & 0.92            \\ \hline
+        Bipolar         & 0.88            \\ \hline
+        Depression      & 0.95            \\ \hline
+        Normal          & 0.98            \\ \hline
+        PTSD            & 0.94            \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+The results of hyperparameter tuning on the Support Vector Machine (SVM) model reveal that the best hyperparameters were \texttt{kernel} set to \texttt{linear}, \texttt{gamma} set to \texttt{scale}, and \texttt{C} set to 1. With these settings, the model achieved an overall accuracy of 85.13\%. The classification report indicates solid performance across most classes, with \texttt{normal} achieving the highest F1-score of 0.95, followed by \texttt{depression} at 0.72 and \texttt{anxiety} at 0.74. The \texttt{bipolar} class had a slightly lower F1-score of 0.61, indicating that the model was less effective in distinguishing this class. The ROC AUC values were strong for most classes, with \texttt{normal} reaching 0.98 and \texttt{depression}, \texttt{PTSD}, and \texttt{anxiety} all scoring above 0.90, showing that the SVM model effectively discriminates between the classes. Overall, the SVM model performed well on this dataset, particularly for the \texttt{normal} and \texttt{anxiety} classes, making it a strong contender for mental health issue classification.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.85\textwidth]{Images/HP SVM CM.png}  
+    \caption{Classification Matrix after Hyperparameter Tuning (SVM)}
+    \label{LSTMROC6}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/HP SVM ROC.png}  
+    \caption{ROC AUC after Hyperparameter Tuning (SVM)}
+    \label{LSTMROC}  % Label for referencing the figure
+\end{figure}
+
+
+\pagebreak
+
+\begin{center}
+    \textbf{Hyperparameter Tuning on Naive Bayes} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Best Hyperparameters}  & \textbf{Value} \\ \hline
+        Alpha                         & 0.2914180608409973 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{Classification Report} \\[0.5em]
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Class}  & \textbf{Precision}  & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        Anxiety         & 0.69                & 0.76            & 0.72              & 379             \\ \hline
+        Bipolar         & 0.75                & 0.55            & 0.64              & 384             \\ \hline
+        Depression      & 0.60                & 0.83            & 0.70              & 373             \\ \hline
+        Normal          & 0.96                & 0.91            & 0.94              & 2183            \\ \hline
+        PTSD            & 0.73                & 0.79            & 0.76              & 394             \\ \hline
+        Accuracy        & 0.84                &                 &                   & 3713            \\ \hline
+        Macro avg       & 0.75                & 0.77            & 0.75              & 3713            \\ \hline
+        Weighted avg    & 0.85                & 0.84            & 0.84              & 3713            \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC Curve Areas for Each Class} \\[0.5em]
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Class}  & \textbf{ROC AUC} \\ \hline
+        Anxiety         & 0.93            \\ \hline
+        Bipolar         & 0.93            \\ \hline
+        Depression      & 0.93            \\ \hline
+        Normal          & 0.99            \\ \hline
+        PTSD            & 0.94            \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+The results of hyperparameter tuning on the Naive Bayes model show that the best hyperparameter was \texttt{alpha} set to 0.2914. With this optimal value, the model achieved an accuracy of 83.95\%. The classification report reveals that the \texttt{normal} class performed the best, with a high F1-score of 0.94, followed by \texttt{PTSD} at 0.76. The \texttt{anxiety} class achieved a solid F1-score of 0.72, while \texttt{bipolar} and \texttt{depression} had lower scores. The ROC AUC curve areas demonstrate strong performance across all classes, with \texttt{normal} reaching a perfect 0.99 and the other classes scoring above 0.90. Overall, the Naive Bayes model performed well, especially in identifying \texttt{normal} and \texttt{PTSD}, making it a good candidate for mental health issue classification.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.85\textwidth]{Images/HP NB CM.png}  
+    \caption{Classification Matrix after Hyperparameter Tuning (Naive Bayes)}
+    \label{LSTMROC7}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/HP NB ROC.png}  
+    \caption{ROC AUC after Hyperparameter Tuning (Naive Bayes)}
+    \label{LSTMROC8}  % Label for referencing the figure
+\end{figure}
+
+\pagebreak
+
+\noindent
+After performing hyperparameter tuning using RandomizedSearchCV, Logistic Regression emerged as the best-performing model for mental health classification. The model achieved an accuracy of 87.72\%, demonstrating its strong ability to correctly classify mental health issues based on text data. The best hyperparameters found during tuning were \texttt{'solver': 'liblinear', 'penalty': 'l2', 'C': 1}, which contributed to the model's robustness and efficiency. In terms of classification performance, Logistic Regression showed a high recall and precision, especially for classes like \textit{normal}, with a recall of 0.99, indicating its proficiency in identifying the most prevalent class in the dataset. Furthermore, the ROC AUC scores for each class were impressive, with values close to or exceeding 0.90, which suggests excellent model discrimination between classes. Overall, Logistic Regression's combination of high accuracy, solid precision-recall balance, and optimal hyperparameters makes it the most suitable model for this task.
+
+
+
+
+
+
+
 
 % ------------------------ Result and Analysis Ends -------------------------
