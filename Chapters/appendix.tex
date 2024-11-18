@@ -679,6 +679,8 @@ Below are some screenshots from the web application.
     \label{01i}  % Label for referencing the figure
 \end{figure}
 
+\pagebreak
+
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{App Images/02 Interface.png}  
@@ -692,6 +694,8 @@ Below are some screenshots from the web application.
     \caption{Text Classification Result}
     \label{03i}  % Label for referencing the figure
 \end{figure}
+
+\pagebreak
 
 \begin{figure}[h!]  
     \centering
@@ -707,6 +711,8 @@ Below are some screenshots from the web application.
     \label{05i}  % Label for referencing the figure
 \end{figure}
 
+\pagebreak
+
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{App Images/12 Interface.png}  
@@ -721,6 +727,7 @@ Below are some screenshots from the web application.
     \label{06i}  % Label for referencing the figure
 \end{figure}
 
+\pagebreak
 
 \begin{figure}[h!]  
     \centering
@@ -736,6 +743,7 @@ Below are some screenshots from the web application.
     \label{08i}  % Label for referencing the figure
 \end{figure}
 
+\pagebreak
 
 \begin{figure}[h!]  
     \centering
@@ -752,14 +760,150 @@ Below are some screenshots from the web application.
 \end{figure}
 
 
+\pagebreak
 
 
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Model Retraining Functionality]        
+    \begin{lstlisting}[language=Python]
+# File path for dataset
+dataset_path = 'preprocessed_mental_health.csv'
+
+def update_dataset(new_text, mental_health_issue):
+    if os.path.exists(dataset_path):
+        dataset = pd.read_csv(dataset_path)
+    else:
+        # If the dataset doesn't exist, create a new one
+        dataset = pd.DataFrame(columns=['text', 'mental_health_issue', 'cleaned_text'])
+
+    # Clean the text (adjust cleaning based on your preprocessing)
+    cleaned_text = new_text.lower()
+
+    # Create a new DataFrame for the new row
+    new_row = pd.DataFrame({
+        'text': [new_text],
+        'mental_health_issue': [mental_health_issue],
+        'cleaned_text': [cleaned_text]
+    })
+
+    # Use pd.concat to append the new row
+    dataset = pd.concat([dataset, new_row], ignore_index=True)
+
+    # Save the updated dataset
+    dataset.to_csv(dataset_path, index=False)
 
 
+def retrain_model():
+    """Retrain the Logistic Regression model with the updated dataset."""
+    # Load the updated dataset
+    dataset = pd.read_csv(dataset_path)
+    
+    # Ensure required columns exist
+    if 'cleaned_text' not in dataset.columns or 'mental_health_issue' not in dataset.columns:
+        st.error("Dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+        return None, None
+    
+    # Preprocessing
+    dataset.dropna(subset=['cleaned_text'], inplace=True)
+    vectorizer = CountVectorizer()
+    X = vectorizer.fit_transform(dataset['cleaned_text'])
+    y = dataset['mental_health_issue']
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Model Retraining Functionality]        
+    \begin{lstlisting}[language=Python]
+    # Split dataset
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    # Train Logistic Regression
+    model = LogisticRegression(multi_class='ovr', max_iter=10000)
+    model.fit(X_train, y_train)
+    
+    # Save the updated model and vectorizer
+    joblib.dump(model, 'LRmodel.pkl')
+    joblib.dump(vectorizer, 'LRvectorizer.pkl')
+    
+    # Evaluate
+    accuracy = accuracy_score(y_test, model.predict(X_test))
+    return model, accuracy
+
+def update_and_retrain(example_text, example_issue):
+    try:
+        # Update dataset
+        update_dataset(example_text, example_issue)
+
+        # Display the last three rows of the updated dataset
+        dataset = pd.read_csv(dataset_path)
+        st.write("Updated Dataset (Last 3 Rows):")
+        st.write(dataset.tail(3))
+
+        # Notify user about retraining process
+        st.info("Model is being retrained...")
+
+        # Retrain model
+        model, accuracy = retrain_model()
+
+        # Display retraining success message
+        if model:
+            st.success(f"Model retrained successfully! Accuracy: {accuracy * 100:.2f}%")
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+
+# Function to classify text, display result and retrain model
+def classify_text_retrain_model(text):
+    input_vectorized = vectorizer.transform([text])
+    prediction_proba = model.predict_proba(input_vectorized)
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Model Retraining Functionality]        
+    \begin{lstlisting}[language=Python]
+    issue_labels = model.classes_
+    proba_df = pd.DataFrame(prediction_proba, columns=issue_labels).T
+    proba_df.columns = ['Probability']
+
+    top_issue = proba_df['Probability'].idxmax()
+    top_probability = proba_df['Probability'].max()
+
+    st.write(f"The most likely mental health concern is: {top_issue} with a probability of {top_probability:.2%}")
+
+    get_wellbeing_insight(text, top_issue)
+
+    # Adding Model Retraining Functionality
+    update_and_retrain(text, top_issue)
+
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code provides a system for updating a dataset with new text data, retraining a Logistic Regression model based on the updated data, and classifying new input text while also retraining the model. The \texttt{update\_dataset} function appends new text and its associated mental health issue to an existing CSV file. If the dataset doesn't already exist, it creates a new one with columns for the text, the mental health issue, and the cleaned version of the text. The text is then cleaned (in this case, by converting it to lowercase). After updating the dataset, the function saves it back to the CSV file. The \texttt{retrain\_model} function reads the dataset, ensures it contains the necessary columns, cleans the data by removing any rows with missing values, and preprocesses the text using a \texttt{CountVectorizer}. It splits the dataset into training and testing sets, then trains a Logistic Regression model. The model and vectorizer are saved to disk using \texttt{joblib}, and the function returns the trained model and its accuracy on the test set. The \texttt{update\_and\_retrain} function combines these operations, first calling \texttt{update\_dataset} to add new data, then displaying the last three rows of the updated dataset using Streamlit's \texttt{st.write}, and finally retraining the model. If successful, it shows the retrained model's accuracy. The \texttt{classify\_text\_retrain\_model} function takes an input text, vectorizes it using the pre-trained vectorizer, and uses the trained model to predict the probability of different mental health issues. It converts these probabilities into a DataFrame and identifies the mental health issue with the highest probability. The function displays this prediction along with its associated probability and calls another function, \texttt{get\_wellbeing\_insight}, to provide additional insights. Finally, it calls \texttt{update\_and\_retrain} to update the dataset and retrain the model with the new prediction.
 
 
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{App Images/14 Interface.png}  
+    \caption{Text Classification and Retrain Model}
+    \label{101i}  % Label for referencing the figure
+\end{figure}
 
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{App Images/15 Interface.png}  
+    \caption{Result from Text Classification and Model Retraining}
+    \label{102i}  % Label for referencing the figure
+\end{figure}
 
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{App Images/16 Interface.png}  
+    \caption{Reddit Analysis with Model Retraining}
+    \label{10i}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{App Images/17 Interface.png}  
+    \caption{Result from Reddit Analysis and Model Retraining}
+    \label{10i}  % Label for referencing the figure
+\end{figure}
 
 % ----------------------- Prototype ends -------------------
 
