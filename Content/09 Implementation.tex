@@ -26,39 +26,43 @@ Furthermore, these selected features align with the project’s goals and provid
 
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Collecting Reddit Posts]
     \begin{lstlisting}[language=Python]
-    import praw
-    import pandas as pd
-    import time
-    
-    # Initialize Reddit API
-    reddit = praw.Reddit(client_id='YOUR_CLIENT_ID',
-                         client_secret='YOUR_CLIENT_SECRET',
-                         user_agent='Mental Health Classifier')
-    
-    # Define subreddits and post types
-    subreddits = {'normal': ['news', 'AskReddit'], 
-                  'depression': ['depression'], 
-                  'ptsd': ['PTSD'], 
-                  'anxiety': ['Anxiety'], 
-                  'bipolar': ['BipolarReddit']}
-    post_types = ['hot', 'new', 'top']
-    posts_per_type = 100
-    
-    # Collect and save posts
-    data = []
-    for label, subs in subreddits.items():
-        for sub in subs:
-            for post_type in post_types:
-                posts = getattr(reddit.subreddit(sub), post_type)(limit=posts_per_type)
-                for post in posts:
-                    data.append([post.title + " " + post.selftext, label])
-                time.sleep(1)
-    
-    df = pd.DataFrame(data, columns=['text', 'label'])
-    df.to_csv(f'{label}_dataset.csv', index=False)
+import praw
+import pandas as pd
+import time
+# Initialize Reddit API
+reddit = praw.Reddit(client_id='YOUR_CLIENT_ID',
+                        client_secret='YOUR_CLIENT_SECRET',
+                        user_agent='Mental Health Classifier')
+# Define subreddits and post types
+subreddits = {'normal': ['news', 'AskReddit'], 
+                'depression': ['depression'], 
+                'ptsd': ['PTSD'], 
+                'anxiety': ['Anxiety'], 
+                'bipolar': ['BipolarReddit']}
+post_types = ['hot', 'new', 'top']
+posts_per_type = 100
+# Collect and save posts
+data = []
+for label, subs in subreddits.items():
+    for sub in subs:
+        for post_type in post_types:
+            posts = getattr(reddit.subreddit(sub), post_type)(limit=posts_per_type)
+            for post in posts:
+                data.append([post.title + " " + post.selftext, label])
+            time.sleep(1)
+df = pd.DataFrame(data, columns=['text', 'label'])
+df.to_csv(f'{label}_dataset.csv', index=False)
     \end{lstlisting}
     \end{tcolorbox}
     
+    \begin{figure}[h!]  
+        \centering
+        \includegraphics[width=0.9\textwidth]{Images/Dataset.png}  
+        \caption{Obtained Dataset}
+        \label{LSTMROC711}  % Label for referencing the figure
+    \end{figure}
+
+
     \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Combining Collected Datasets]
     \begin{lstlisting}[language=Python]
     import pandas as pd
