@@ -662,7 +662,12 @@ def run_app():
 \noindent 
 The \texttt{run\_app()} function defines a Streamlit application to detect mental health disorders using multiple input methods: text input, image upload, video upload, and Reddit username analysis. Users can interact with a sidebar to choose their preferred mode of input. Each mode processes the data accordingly, utilizing pre-defined helper functions for text translation, text extraction from images, audio transcription, and Reddit user data retrieval. Depending on the mode, the app combines extracted and processed data to classify mental health concerns or display insights. It leverages libraries like \texttt{GoogleTranslator}, \texttt{librosa}, and \texttt{FFmpeg} for processing and analysis. The results include mood analysis, classification probabilities, and potential mental health issues. This app provides a comprehensive tool for mental health-related data analysis. For the Twitter analysis mode, the app allows users to input a Twitter username, fetches the latest tweets from the user, and extracts both text content and any associated images. It uses the \texttt{tweepy} library to interact with the Twitter API and retrieve tweets that are not retweets or replies. For each tweet, the app extracts the text and checks for any media attachments, specifically images. If images are found, it fetches and processes them using the \texttt{fetch\_image\_content} function, which downloads the image and uses OCR (Optical Character Recognition) to extract text from the image. Both the tweet text and any extracted text from the images are combined to create a comprehensive dataset for analysis. This data is then passed through a pre-trained machine learning model to classify the mental health concerns present in the posts. The model generates predictions, and the app displays the most frequently detected mental health issue along with its percentage occurrence. It also shows the distribution of mental health issues across the posts and provides insights using a separate well-being model. This feature enables the app to offer a detailed analysis of the mental health state inferred from Twitter posts, based on the extracted text and images. Additionally, the app integrates the Gemini API for advanced mood analysis and mental well-being insights. The Gemini API, accessed through a Flask server, provides an external service that can process large volumes of text data for sentiment analysis, mood classification, and mental health predictions. The Gemini API is a machine learning-powered API that allows users to analyze textual data by passing in relevant text input. In this case, the app sends the combined text from Twitter posts (including extracted text from images) to the Gemini API for analysis. The API returns insights such as sentiment scores, emotional tones, and relevant mental health classifications based on the input. The Flask server acts as an intermediary between the Streamlit app and the Gemini API. It handles HTTP requests from the Streamlit app, passes the text data to the Gemini API, and processes the responses before sending them back to the Streamlit interface. When a user submits their data, the app makes an HTTP request to the Flask server, which in turn queries the Gemini API. The Flask server ensures that the data is properly formatted and can handle various types of inputs, whether they are text, audio, or other formats. The Gemini API processes this data and returns a structured response that contains mood-related insights and mental health predictions.
     
-
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/Sequence Diagram.png}  
+    \caption{Sequence Diagram of the Application}
+    \label{012i}  % Label for referencing the figure
+\end{figure}
 
 \noindent
 Below are some screenshots from the web application.
@@ -697,7 +702,7 @@ Below are some screenshots from the web application.
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.9\textwidth]{App Images/05 Interface.png}  
+    \includegraphics[width=1.0\textwidth]{App Images/05 Interface.png}  
     \caption{Image Classification Result}
     \label{05i}  % Label for referencing the figure
 \end{figure}
@@ -726,7 +731,7 @@ Below are some screenshots from the web application.
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.9\textwidth]{App Images/07 Interface.png}  
+    \includegraphics[width=1.0\textwidth]{App Images/07 Interface.png}  
     \caption{Result from Reddit Posts Analysis}
     \label{08i}  % Label for referencing the figure
 \end{figure}
@@ -734,14 +739,14 @@ Below are some screenshots from the web application.
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.9\textwidth]{App Images/08 Interface.png}  
+    \includegraphics[width=1.0\textwidth]{App Images/08 Interface.png}  
     \caption{Twitter User Analysis}
     \label{09i}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
-    \includegraphics[width=0.9\textwidth]{App Images/10 Interface.png}  
+    \includegraphics[width=1.0\textwidth]{App Images/10 Interface.png}  
     \caption{Result from Twitter Posts Analysis}
     \label{10i}  % Label for referencing the figure
 \end{figure}
