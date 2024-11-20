@@ -876,6 +876,7 @@ def classify_text_retrain_model(text):
 \noindent
 This code provides a system for updating a dataset with new text data, retraining a Logistic Regression model based on the updated data, and classifying new input text while also retraining the model. The \texttt{update\_dataset} function appends new text and its associated mental health issue to an existing CSV file. If the dataset doesn't already exist, it creates a new one with columns for the text, the mental health issue, and the cleaned version of the text. The text is then cleaned (in this case, by converting it to lowercase). After updating the dataset, the function saves it back to the CSV file. The \texttt{retrain\_model} function reads the dataset, ensures it contains the necessary columns, cleans the data by removing any rows with missing values, and preprocesses the text using a \texttt{CountVectorizer}. It splits the dataset into training and testing sets, then trains a Logistic Regression model. The model and vectorizer are saved to disk using \texttt{joblib}, and the function returns the trained model and its accuracy on the test set. The \texttt{update\_and\_retrain} function combines these operations, first calling \texttt{update\_dataset} to add new data, then displaying the last three rows of the updated dataset using Streamlit's \texttt{st.write}, and finally retraining the model. If successful, it shows the retrained model's accuracy. The \texttt{classify\_text\_retrain\_model} function takes an input text, vectorizes it using the pre-trained vectorizer, and uses the trained model to predict the probability of different mental health issues. It converts these probabilities into a DataFrame and identifies the mental health issue with the highest probability. The function displays this prediction along with its associated probability and calls another function, \texttt{get\_wellbeing\_insight}, to provide additional insights. Finally, it calls \texttt{update\_and\_retrain} to update the dataset and retrain the model with the new prediction.
 
+\pagebreak
 
 \begin{figure}[h!]  
     \centering
@@ -891,6 +892,8 @@ This code provides a system for updating a dataset with new text data, retrainin
     \label{102i}  % Label for referencing the figure
 \end{figure}
 
+\pagebreak
+
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{App Images/16 Interface.png}  
@@ -904,6 +907,105 @@ This code provides a system for updating a dataset with new text data, retrainin
     \caption{Result from Reddit Analysis and Model Retraining}
     \label{10i}  % Label for referencing the figure
 \end{figure}
+
+
+\pagebreak
+
+
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Emotion Analysis and Mental Health Insights]
+    \begin{lstlisting}[language=Python]
+def detect_emotions_from_frame(frame):
+    try:
+        # Use DeepFace to analyze emotions
+        result = DeepFace.analyze(frame, actions=['emotion'], enforce_detection=False)
+        return result[0]['dominant_emotion']
+    except Exception as e:
+        print(f"No expression or error detecting emotion: {e}")
+        return None
+
+def analyze_emotions_from_frames(frames):
+    # Initialize an emotion counts dictionary
+    emotion_counts = {'happy': 0, 'sad': 0, 'angry': 0, 'disgust': 0, 'fear': 0, 'surprise': 0, 'neutral': 0}
+    frame_emotions = []
+
+    for idx, frame in enumerate(frames):
+        # Detect emotions from the current frame
+        emotion = detect_emotions_from_frame(frame)
+        if emotion:
+            frame_emotions.append(emotion)
+            if emotion in emotion_counts:
+                emotion_counts[emotion] += 1
+
+    return emotion_counts, frame_emotions
+
+def display_emotion_summary(emotion_counts):
+    # Convert the emotion counts to a DataFrame for display
+    emotion_df = pd.DataFrame(list(emotion_counts.items()), columns=['Emotion', 'Count'])
+    st.write("Emotion Analysis Summary:")
+    st.table(emotion_df)
+    return max(emotion_counts, key=emotion_counts.get)
+
+def analyze_with_gemini(dominant_emotion, emotion_counts):
+try:
+    # Start a chat session with the Gemini API
+    chat_session = gemini_model.start_chat(history=[])
+
+    # Summarize emotion counts for the prompt
+    emotion_summary = ", ".join([f"{emotion}: {count}" for emotion, count in emotion_counts.items()])
+    \end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Emotion Analysis and Mental Health Insights]
+    \begin{lstlisting}[language=Python]
+        # Create a prompt for the Gemini API
+        prompt = (
+            f"The detected dominant emotion is '{dominant_emotion}'. "
+            f"{emotion_summary}. Based on this information, analyze the potential implications for mental health "
+            f"conditions such as depression, anxiety, PTSD, or bipolar disorder. Provide actionable insights in three lines."
+        )
+
+        # Send the prompt and get a response
+        response = chat_session.send_message(prompt)
+        st.write(response.text)
+    except Exception as e:
+        print(f"Error in Gemini API call: {e}")
+        return "An error occurred while communicating with the Gemini API. Please try again later."
+    \end{lstlisting}
+\end{tcolorbox}
+
+\textbf{Explanation:}
+
+\begin{enumerate}
+    \item \texttt{detect\_emotions\_from\_frame(frame)}: This function uses the \texttt{DeepFace} library to detect the dominant emotion from a given video frame. If no emotion is detected or an error occurs, it returns \texttt{None}.
+    \item \texttt{analyze\_emotions\_from\_frames(frames)}: This function iterates through multiple frames of a video, applies \texttt{detect\_emotions\_from\_frame} to each frame, and counts the frequency of detected emotions in a dictionary.
+    \item \texttt{display\_emotion\_summary(emotion\_counts)}: This function displays a summary of detected emotions in a table format using Streamlit. It also identifies the dominant emotion with the highest count.
+    \item \texttt{analyze\_with\_gemini(dominant\_emotion, emotion\_counts)}: This function communicates with the Gemini API. It prepares a prompt summarizing the emotion analysis, sends it to the API, and displays the response in Streamlit. It also handles potential errors during API interaction.
+\end{enumerate}
+
+
+\noindent
+The DeepFace Python module is a comprehensive framework for facial recognition and facial attribute analysis using deep learning. It provides a high-level interface to process and analyze facial data through a variety of pre-trained deep learning models. The module is designed to make facial recognition, emotion detection, age estimation, and gender detection straightforward by abstracting the complexities of deep learning. DeepFace supports multiple state-of-the-art face recognition models, including VGG-Face, Google FaceNet, OpenFace, Facebook DeepFace, and Dlib. Users can choose any of these models depending on their specific requirements. It also integrates with various facial attribute models for emotion analysis, enabling it to classify emotions such as happiness, sadness, anger, and more. The module uses TensorFlow and Keras as its backend frameworks to run deep learning operations efficiently. At its core, DeepFace operates by detecting and aligning faces in an image using a pre-trained facial detector, ensuring consistent positioning before feeding the face into recognition or analysis pipelines. This preprocessing step is critical because it eliminates variability caused by head tilt, lighting, and facial orientation. For emotion detection specifically, DeepFace uses a softmax classifier at the final layer of its models to predict probabilities for different emotions. DeepFace is also known for its flexibility and simplicity. Users can invoke facial analysis or recognition with a single line of code. Additionally, the module includes an \textbf{analyze} function for emotion, age, and gender detection, as well as a \textbf{verify} function to compare two images for identity matching. It also allows users to toggle between facial detectors, including OpenCV, SSD, and MTCNN, depending on their hardware and processing needs. The module emphasizes usability with optional parameters for tuning accuracy, speed, and error handling. For example, users can enable or disable facial detection enforcement, which is useful in scenarios where non-human faces or partial occlusions are present. The ability to batch process multiple images and integrate seamlessly with large datasets makes DeepFace a preferred choice for production-level applications. Overall, DeepFace abstracts the complexities of implementing deep learning models for facial analysis, providing a user-friendly and powerful tool for a variety of facial recognition and emotion detection tasks.
+
+\vspace{1em}
+
+\noindent
+In a mental health disorder detection application, DeepFace plays a pivotal role in extracting facial expressions from images and videos, which can be critical for assessing emotional states and providing insights into potential mental health concerns. The module leverages deep learning models trained to recognize a wide array of facial expressions, such as happiness, sadness, anger, surprise, fear, and disgust. These expressions are vital indicators of a person’s emotional state, which, when analyzed over time, can offer valuable clues about their mental health. DeepFace first processes the input image or video by detecting faces through a facial recognition model, ensuring that only human faces are analyzed. Once faces are detected, the module aligns and normalizes the images to account for variations in lighting, angles, and head positions, ensuring that the analysis remains accurate regardless of how the subject is positioned or oriented. DeepFace's emotion detection model then works by analyzing the subtle changes in facial muscle movements that correspond to different emotional expressions. For instance, a furrowed brow and tight lips may indicate anger, while a smiling face may suggest happiness. These expressions are captured and classified using convolutional neural networks (CNNs), which are adept at identifying patterns in visual data. DeepFace outputs these emotions as probability scores, allowing the application to interpret the likelihood of each emotion being present in a given frame. In a video context, the module processes each frame sequentially, enabling the tracking of emotional transitions over time, which is particularly valuable in detecting mood fluctuations or episodes commonly associated with mental health conditions like depression, anxiety, or bipolar disorder. The ability to extract and analyze these facial expressions in real-time or from pre-recorded content empowers mental health disorder detection systems to better understand the emotional well-being of individuals. By assessing facial expressions in conjunction with other data points, such as speech or text analysis, DeepFace helps build a comprehensive profile of a person’s emotional state. This can aid in detecting mental health issues early, identifying stress triggers, or tracking the effectiveness of therapeutic interventions. In this way, DeepFace’s emotion detection capabilities become an essential tool in a mental health disorder detection application, providing critical insights that can inform diagnosis and personalized care plans.
+
+
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{App Images/12-1 Interface.png}  
+    \caption{Result from the emotion analysis of facial expression}
+    \label{10i23}  % Label for referencing the figure
+\end{figure}
+
+
+
+
+
+
+
 
 % ----------------------- Prototype ends -------------------
 
