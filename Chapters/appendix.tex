@@ -1001,8 +1001,51 @@ In a mental health disorder detection application, DeepFace plays a pivotal role
 \end{figure}
 
 
+\pagebreak
 
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Image Captioning]
+    \begin{lstlisting}[language=Python]
+# Function to load the model (cached for efficiency)
+@st.cache_resource
+def load_model():
+    model_name = "nlpconnect/vit-gpt2-image-captioning"
+    model = VisionEncoderDecoderModel.from_pretrained(model_name)
+    feature_extractor = ViTImageProcessor.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    return model, feature_extractor, tokenizer
 
+# Load the model
+IDmodel, IDfeature_extractor, IDtokenizer = load_model()
+
+# Set device to GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+IDmodel.to(device)
+
+# Function to generate caption
+def generate_caption(image):
+    # Preprocess the image
+    if image.mode != "RGB":
+        image = image.convert(mode="RGB")
+    pixel_values = IDfeature_extractor(images=image, return_tensors="pt").pixel_values
+    pixel_values = pixel_values.to(device)
+
+    # Generate caption (you can adjust max_length and num_beams as needed)
+    with torch.no_grad():
+        output_ids = IDmodel.generate(pixel_values, max_length=16, num_beams=4)
+    caption = IDtokenizer.decode(output_ids[0], skip_special_tokens=True)
+    return caption
+\end{lstlisting}
+    \end{tcolorbox}
+
+\noindent
+The provided code implements two key functionalities: image captioning and mental health text classification. For image captioning, it loads a pre-trained VisionEncoderDecoder model (vit-gpt2-image-captioning) using Hugging Face tools, processes input images, and generates captions. The \textbf{vit-gpt2-image-captioning} model combines two advanced architectures, the Vision Transformer (ViT) and GPT-2, to generate descriptive captions for images. It functions as an encoder-decoder system where ViT acts as the encoder to process and extract meaningful features from the image, and GPT-2 acts as the decoder to generate coherent natural language captions based on those features. The Vision Transformer (ViT) is a transformer-based model for image recognition. Unlike traditional convolutional neural networks (CNNs), which process images in a grid-like fashion, ViT splits the image into smaller patches (e.g., 16x16 pixels). These patches are flattened into vectors and passed through a transformer encoder. This encoder treats each patch as a token, similar to how words are tokens in natural language processing. By leveraging self-attention mechanisms, ViT captures both local and global dependencies in the image, resulting in a comprehensive feature representation. These features are passed to the decoder for further processing. GPT-2, a pre-trained generative language model, serves as the decoder. It uses the features extracted by ViT to generate captions word by word. Transformers like GPT-2 rely heavily on self-attention and positional encodings to understand the relationships between words in a sequence. In this context, GPT-2 uses the visual feature embeddings as the initial context and generates text sequentially. At each step, it predicts the next word in the caption based on the previous words and the image features, ensuring that the captions are contextually relevant and grammatically accurate. Transformers are crucial here because they allow the model to handle complex dependencies and interactions in both image and text data. ViT uses transformers to learn rich visual representations by modeling relationships between patches in the image, while GPT-2 leverages transformers to generate fluent and coherent text based on the encoded image features.
+    
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{App Images/18 Interface.png}  
+    \caption{Generate Image Caption}
+    \label{10i234}  % Label for referencing the figure
+\end{figure}    
 
 
 
