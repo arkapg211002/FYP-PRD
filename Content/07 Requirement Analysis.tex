@@ -1,4 +1,5 @@
 % --------------------- Requirement Analysis ---------------------------------
+\pagebreak
 
 \section{Requirement Analysis}
 
@@ -31,6 +32,8 @@ The Requirement Matrix is a comprehensive tool used to track and manage the key 
 \noindent
 The system requires an ability to collect and ingest a large dataset of Reddit posts using Python Reddit API Wrapper. The data should include text content from tweets, associated sentiment labels, and other metadata such as timestamp and user details. This will serve as the primary source of information for mental health disorder detection. The system must ensure that the dataset is loaded correctly into the machine learning environment, and any discrepancies in the structure should be handled with pre-processing steps like cleaning, normalization. \\
 
+\pagebreak
+
 \noindent
 \textbf{\emph{Requirement ID: FR-002}} \\ 
 \textbf{\emph{Description: Data Cleaning and Preprocessing}} \\
@@ -41,7 +44,7 @@ The system must include modules to clean the raw data, such as removing irreleva
 
 \noindent
 \textbf{\emph{Requirement ID: FR-003}} \\ 
-\textbf{\emph{Description: Sentiment and Disorder Detection Model}} \\
+\textbf{\emph{Description: Training Machine and Deep Learning Models}} \\
 \textbf{\emph{Priority: High}} \\
 \textbf{\emph{Category: Functional}} \\
 \noindent
@@ -60,19 +63,22 @@ The system must evaluate the performance of the trained models by splitting the 
 
 \noindent
 \textbf{\emph{Requirement ID: NFR-001}} \\ 
-\textbf{\emph{Description: Documentation}} \\
+\textbf{\emph{Description: Testing}} \\
 \textbf{\emph{Priority: Medium}} \\
 \textbf{\emph{Category: Non Functional}} \\
 \noindent
-The addition of documentation and maintenance manuals as a non-functional requirement ensures that the system is not only usable in the short term but also maintainable and extensible over time. This guarantees that future updates and improvements to the system can be implemented without disrupting existing functionality or requiring a steep learning curve for new developers or users. \\
+The addition of testing as a non-functional requirement ensures that the system is not only usable in the short term but also maintainable and extensible over time. This guarantees that future updates and improvements to the system can be implemented without disrupting existing functionality or requiring a steep learning curve for new developers or users. \\
 
 \noindent
 \textbf{\emph{Requirement ID: NFR-002}} \\ 
-\textbf{\emph{Description:  Scalability}} \\
+\textbf{\emph{Description:  Deployment}} \\
 \textbf{\emph{Priority: Medium}} \\
 \textbf{\emph{Category: Non Functional}} \\
 \noindent
-The system must be designed to efficiently process large volumes of data, considering the potential growth in the amount of social media posts that need to be analyzed. The data processing pipeline should be scalable to handle increasing data size without significant degradation in performance. This could involve implementing parallel processing techniques or leveraging cloud-based infrastructure to ensure that processing large datasets remains feasible even as the dataset scales. 
+The system must be deployed considering the potential growth in the amount of social media posts that need to be analyzed. The data processing pipeline should be scalable to handle increasing data size without significant degradation in performance. This could involve implementing parallel processing techniques or leveraging cloud-based infrastructure to ensure that processing large datasets remains feasible even as the dataset scales. 
 
+\vspace{1em}
+\noindent
+The system is designed to support comprehensive mental health disorder detection from social media posts, with key functional and non-functional requirements. It requires the ability to collect and ingest large datasets of Reddit posts using the Python Reddit API Wrapper, capturing text content, sentiment labels, timestamps, and user metadata. This data forms the foundation for analysis, necessitating robust pre-processing steps to ensure quality and consistency. The pre-processing pipeline must clean raw data by removing irrelevant characters, URLs, and stopwords, handling missing values, and tokenizing text. Additionally, text should be converted into numerical formats using techniques like Term Frequency-Inverse Document Frequency (TF-IDF) for model training. The system incorporates machine learning algorithms such as Logistic Regression and XGBoost to classify social media posts and detect potential mental health disorders. It must support training these models on historical data while applying them to predict and classify new posts. To ensure model reliability, the system splits data into training and test sets, evaluating performance using metrics like accuracy, precision, recall, and F1-score. Model fine-tuning, including hyperparameter adjustments, is essential for optimizing performance. Non-functional requirements focus on testing to ensure the system remains maintainable and extensible, enabling future updates without significant disruption. Additionally, deployment considerations emphasize scalability to process increasing volumes of social media posts, leveraging parallel processing and cloud infrastructure to maintain efficiency. Together, these requirements provide a robust framework for effective and scalable mental health detection.
 
 % -------------------- Requirement Analysis Ends -----------------------------

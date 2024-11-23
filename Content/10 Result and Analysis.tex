@@ -787,10 +787,23 @@ The results of hyperparameter tuning on the Naive Bayes model show that the best
 After performing hyperparameter tuning using RandomizedSearchCV, Logistic Regression emerged as the best-performing model for mental health classification. The model achieved an accuracy of 87.72\%, demonstrating its strong ability to correctly classify mental health issues based on text data. The best hyperparameters found during tuning were \texttt{'solver': 'liblinear', 'penalty': 'l2', 'C': 1}, which contributed to the model's robustness and efficiency. In terms of classification performance, Logistic Regression showed a high recall and precision, especially for classes like \textit{normal}, with a recall of 0.99, indicating its proficiency in identifying the most prevalent class in the dataset. Furthermore, the ROC AUC scores for each class were impressive, with values close to or exceeding 0.90, which suggests excellent model discrimination between classes. Overall, Logistic Regression's combination of high accuracy, solid precision-recall balance, and optimal hyperparameters makes it the most suitable model for this task.
 
 
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/ML GRAPH 1.png}  
+    \caption{Result Comparison of the Algorithms}
+    \label{dfdl145}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/ML GRAPH 2 HT.png}  
+    \caption{Result Comparison after Hyperparameter Tuning}
+    \label{dfdl123}  % Label for referencing the figure
+\end{figure}
 
 
+\noindent 
+K-Nearest Neighbors (KNN) performs significantly poorly on this dataset compared to other algorithms, both before and after hyperparameter tuning. The dataset used, which includes Reddit posts with corresponding mental health labels, presents challenges for KNN due to its reliance on distance-based metrics. Specifically, KNN uses the distance between data points to classify them, but this approach is sensitive to the scale and distribution of features. In the case of text data, the feature space can be sparse and high-dimensional, making it difficult for KNN to find meaningful relationships between the posts and their associated mental health labels. After hyperparameter tuning, KNN was optimized with parameters such as \textbf{weights='distance'}, \textbf{n\_neighbors=10}, and \textbf{metric='euclidean'}, yet its performance remains suboptimal. This suggests that KNN struggles with the complexities inherent in text classification tasks, where the relationships between features (such as words or phrases in a Reddit post) are often non-linear and context-dependent. Despite tuning, the algorithm's performance metrics—accuracy, precision, recall, and F1-score—remain notably lower than those of other algorithms like Logistic Regression, Naive Bayes, or SVM. Additionally, KNN's inability to capture these subtleties in language means it performs poorly, particularly in distinguishing between categories like anxiety, bipolar disorder, or PTSD, where the text patterns may be more nuanced. Overall, KNN's reliance on proximity without considering the richer context of textual data likely contributes to its lower performance on this mental health classification task. Other algorithms, particularly those that are more suited for high-dimensional and sparse data (like Logistic Regression or SVM), show much better results as they can better account for the underlying patterns in the Reddit posts.
 
-
-
-
+\pagebreak
 % ------------------------ Result and Analysis Ends -------------------------
