@@ -970,15 +970,130 @@ print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 This code implements a Naive Bayes classifier using the MultinomialNB algorithm to classify mental health issues from text data, with hyperparameter tuning via RandomizedSearchCV. The dataset is first loaded, ensuring the required columns, \texttt{cleaned\_text} (features) and \texttt{mental\_health\_issue} (target), exist. Rows with missing values in the \texttt{cleaned\_text} column are removed to maintain data quality. The text is vectorized using \texttt{CountVectorizer}, converting it into a bag-of-words representation. The features (\(X\)) and target (\(y\)) are then split into training (80\%) and test (20\%) sets to facilitate proper evaluation. The Naive Bayes model is initialized, and a parameter distribution for \texttt{alpha} is defined using a uniform distribution, sampling values between 0.001 and 5.0. \texttt{RandomizedSearchCV} is utilized to explore different values for \texttt{alpha} over 10 iterations, using 5-fold cross-validation and accuracy as the scoring metric. The best hyperparameters are identified and used to configure the final Naive Bayes model. The model is then tested on the unseen data (test set).
 
 
+\subsubsection{Ensemble Model with Logistic Regression and XGBoost}
 
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Model Loading and Preprocessing]
+    \begin{lstlisting}[language=Python]
+import pickle
+from sklearn.ensemble import StackingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report
+import xgboost as xgb
+import pandas as pd
 
+# Load the Logistic Regression model and vectorizer
+with open('LRmodel.pkl', 'rb') as file:
+    lr_model = pickle.load(file)
 
+with open('LRvectorizer.pkl', 'rb') as file:
+    lr_vectorizer = pickle.load(file)
 
+# Load the XGBoost model, label encoder, and TF-IDF vectorizer
+with open('xgb_model.pkl', 'rb') as file:
+    xgb_model = pickle.load(file)
 
+with open('label_encoder.pkl', 'rb') as file:
+    label_encoder = pickle.load(file)
 
+with open('tfidf_vectorizer.pkl', 'rb') as file:
+    tfidf_vectorizer = pickle.load(file)
+    \end{lstlisting}
+\end{tcolorbox}
 
+\noindent
+This Python code is centered around preparing a machine learning workflow by loading pre-trained models and their corresponding preprocessing tools. It begins by importing essential libraries for model evaluation and stacking. The \texttt{pickle} library is specifically used to load serialized Python objects, enabling the restoration of previously trained models and utilities saved as \texttt{.pkl} files. The first part of the code loads a Logistic Regression model along with its associated vectorizer. The Logistic Regression model is deserialized from the \texttt{LRmodel.pkl} file, which represents a trained model capable of predicting outcomes based on vectorized text data. The corresponding vectorizer, stored in \texttt{LRvectorizer.pkl}, is also loaded. This vectorizer, likely a \texttt{CountVectorizer}, converts raw text into numerical feature vectors, which serve as the input for the Logistic Regression model. By loading these components, the workflow ensures consistency with the preprocessing and modeling steps used during training. In the next section, the code loads an XGBoost model alongside its associated tools. The XGBoost model is deserialized from \texttt{xgb\_model.pkl} and represents another trained model designed to classify text data. To facilitate this, the code also loads a label encoder from \texttt{label\_encoder.pkl}. The label encoder is responsible for mapping textual class labels (e.g., "depression" or "normal") to numerical values required by machine learning models. Furthermore, the \texttt{tfidf\_vectorizer.pkl} is loaded to preprocess text data using the Term Frequency-Inverse Document Frequency (TF-IDF) approach, which captures the importance of words in a document relative to a corpus. This ensures that the input text is transformed in a manner consistent with the original training setup of the XGBoost model. The design of this code emphasizes efficiency and consistency by leveraging pre-trained components. Instead of retraining models, it restores them from their serialized forms, enabling immediate use for predictions or integration into ensemble learning setups. This approach also ensures that text preprocessing remains identical to the training phase, avoiding discrepancies in input data handling. By combining these tools, the foundation is laid for complex tasks such as making predictions or building advanced models like stacked classifiers.
 
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Data Preparation]
+\begin{lstlisting}[language=Python]
+# Load the test dataset
+data = pd.read_csv('preprocessed_mental_health.csv')
 
+# Check if 'cleaned_text' column exists
+if 'cleaned_text' not in data.columns:
+    raise ValueError("The dataset must have a 'cleaned_text' column.")
+
+# Remove rows with missing values in 'cleaned_text'
+data.dropna(subset=['cleaned_text'], inplace=True)
+
+# Split features and target
+X_test = data['cleaned_text']
+y_test = data['mental_health_issue']
+
+# Encode target labels
+y_test = label_encoder.transform(y_test)
+
+# Transform the text using the respective vectorizers
+X_test_lr = lr_vectorizer.transform(X_test)  # Logistic Regression vectorizer
+X_test_xgb = tfidf_vectorizer.transform(X_test)  # XGBoost vectorizer
+\end{lstlisting}
+\end{tcolorbox}
+    
+\noindent
+This code snippet focuses on preparing the test dataset for evaluation with pre-trained machine learning models, specifically Logistic Regression and XGBoost. First, the test dataset is loaded from a CSV file named \texttt{preprocessed\_mental\_health.csv} using \texttt{pd.read\_csv}. The dataset is expected to have been preprocessed earlier, containing features and corresponding labels. The code then checks for the existence of a critical column named \texttt{cleaned\_text}. If this column is missing, a \texttt{ValueError} is raised, ensuring that the dataset meets the required format for subsequent steps. Next, the code removes rows with missing values in the \texttt{cleaned\_text} column using \texttt{data.dropna}. This step ensures the dataset is clean and free of incomplete rows that could potentially cause errors during text transformation or model evaluation. After this cleaning process, the dataset is split into features (\texttt{X\_test}) and target labels (\texttt{y\_test}). The features contain the preprocessed text, while the target labels represent the mental health issues corresponding to each text entry. The target labels in \texttt{y\_test} are then encoded into numerical format using a preloaded \texttt{label\_encoder}. This encoding is crucial because machine learning models require numerical representations of categorical labels for classification tasks. By transforming the labels to integers, the encoded labels are consistent with the classes used during the model's training phase. Finally, the text data in \texttt{X\_test} is vectorized using two pre-trained vectorizers. The \texttt{lr\_vectorizer}, likely a \texttt{CountVectorizer} or similar, is applied to produce feature vectors suitable for the Logistic Regression model. Simultaneously, the \texttt{tfidf\_vectorizer} is applied to transform the same text data into feature vectors optimized for the XGBoost model. These transformations ensure that the test data aligns with the feature representations learned by the respective models during training. This setup allows for seamless evaluation of the Logistic Regression and XGBoost models on the same dataset, maintaining consistency with their training configurations.
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Combine Base Model Predictions]
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+# Get predictions from the base models
+lr_predictions_proba = lr_model.predict_proba(X_test_lr)
+xgb_predictions_proba = xgb_model.predict_proba(X_test_xgb)
+
+# Combine predictions as new features
+stacked_features = np.hstack((lr_predictions_proba, xgb_predictions_proba))
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This Python code demonstrates a fundamental step in stacking ensemble learning by combining the prediction probabilities of base models into a single feature set. The process begins with obtaining predictions from two pre-trained models: a Logistic Regression model (\texttt{lr\_model}) and an XGBoost model (\texttt{xgb\_model}). These models generate class probability distributions for the test dataset, which are then used as input features for a meta-learner in an ensemble framework. First, the code uses the \texttt{predict\_proba} method of each model to calculate the probabilities associated with each class for every test instance. For the Logistic Regression model, the feature set (\texttt{X\_test\_lr}) is passed to \texttt{lr\_model.predict\_proba}, producing a 2D array (\texttt{lr\_predictions\_proba}) where each row contains the class probabilities for a corresponding instance. Similarly, the XGBoost model processes its input features (\texttt{X\_test\_xgb}) to generate a comparable 2D array (\texttt{xgb\_predictions\_proba}) of class probabilities. Next, the code combines these probability arrays to form a new feature set, referred to as \texttt{stacked\_features}. This is accomplished using the \texttt{np.hstack} function from the NumPy library, which horizontally stacks the arrays column-wise. The resulting \texttt{stacked\_features} array contains concatenated probability distributions from both models for each instance. For example, if there are three classes and 100 instances, the combined feature set will have 100 rows and six columns (three from each model). This stacked feature set serves as input to a meta-learner, enabling it to make final predictions by leveraging the strengths of both base models. By integrating predictions in this manner, the stacking approach aims to improve classification performance by reducing errors associated with individual models. The meta-learner effectively learns how to optimally combine these predictions to produce more accurate outcomes.
+    
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Train Meta-Learner]
+\begin{lstlisting}[language=Python]
+# Train meta-learner using combined features (optional step if not pre-trained)
+X_train_meta, y_train_meta = stacked_features, y_test  # Example using test data as meta-training data
+
+meta_learner = LogisticRegression(max_iter=5000)
+meta_learner.fit(X_train_meta, y_train_meta)
+
+# Save the trained meta-learner
+with open('meta_learner.pkl', 'wb') as file:
+    pickle.dump(meta_learner, file)
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This Python code focuses on training a meta-learner in the context of stacking ensemble learning. A meta-learner is a secondary machine learning model trained on the outputs of base models, with the goal of combining their predictions to achieve higher accuracy and robustness. The first step involves defining the training data for the meta-learner. The variable \texttt{X\_train\_meta} is set to the combined feature set (\texttt{stacked\_features}), which contains the concatenated prediction probabilities from base models like Logistic Regression and XGBoost. These features represent the likelihood of each class for every instance, as estimated by the base models. The variable \texttt{y\_train\_meta} holds the true labels (\texttt{y\_test}), which are used as the target variable for training the meta-learner. The code then initializes a Logistic Regression model as the meta-learner. The parameter \texttt{max\_iter=5000} ensures that the optimization process has sufficient iterations to converge, particularly for complex datasets or large feature sets. The \texttt{fit} method is called to train the meta-learner using the stacked features and corresponding labels. During this training process, the meta-learner learns how to optimally combine the prediction probabilities from the base models to produce more accurate final predictions. After training, the code saves the meta-learner to a file named \texttt{meta\_learner.pkl} using the \texttt{pickle.dump} function. This step serializes the trained model, enabling its reuse for future predictions without needing to retrain it. By saving the meta-learner, the workflow becomes more efficient, as the combined expertise of the base models and the meta-learner can be leveraged in subsequent tasks. This approach exemplifies the flexibility and power of stacking ensemble learning, where a meta-learner synthesizes the strengths of multiple base models to enhance predictive performance. The ability to save the meta-learner ensures that this improved model can be deployed in practical applications with minimal computational overhead.
+    
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model]
+\begin{lstlisting}[language=Python]
+from sklearn.metrics import confusion_matrix
+
+# Load the pre-trained meta-learner
+with open('meta_learner.pkl', 'rb') as file:
+    meta_learner = pickle.load(file)
+
+# Predict using the meta-learner
+final_predictions = meta_learner.predict(stacked_features)
+
+# Evaluate the ensemble model
+accuracy = accuracy_score(y_test, final_predictions)
+report = classification_report(y_test, final_predictions, target_names=label_encoder.classes_)
+
+print(f"Accuracy: {accuracy * 100:.2f}%")
+print("Classification Report:\n", report)
+# Print confusion matrix
+print("Confusion Matrix:\n", confusion_matrix(y_test, final_predictions))
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This Python code evaluates the performance of a stacking ensemble model, specifically focusing on the meta-learner. The workflow begins by loading the pre-trained meta-learner from a file named \texttt{meta\_learner.pkl}. Using the \texttt{pickle.load} function, the serialized meta-learner model is deserialized and prepared for making predictions. The next step involves generating predictions with the meta-learner. The model uses the stacked features, which are the combined prediction probabilities from the base models (e.g., Logistic Regression and XGBoost). The \texttt{predict} method of the meta-learner outputs the final predicted labels for the test data. To evaluate the ensemble model's effectiveness, the code computes its accuracy using the \texttt{accuracy\_score} function. Accuracy is expressed as the percentage of correctly classified instances relative to the total instances in the test set. Additionally, the \texttt{classification\_report} function is used to generate a detailed performance summary. This report includes precision, recall, F1-score, and support for each mental health class. The \texttt{target\_names} parameter ensures that the report associates the predicted numerical labels with their corresponding class names, as encoded by the label encoder. The evaluation also involves generating a confusion matrix, which provides an in-depth view of the classification performance. The \texttt{confusion\_matrix} function compares the true labels (\texttt{y\_test}) with the predicted labels (\texttt{final\_predictions}), resulting in a matrix that shows the counts of true positives, true negatives, false positives, and false negatives for each class. Finally, the accuracy, classification report, and confusion matrix are printed to the console. This comprehensive evaluation allows the user to assess the ensemble model's overall performance, identify any weaknesses (e.g., misclassifications for specific classes), and confirm the effectiveness of the meta-learner in combining predictions from base models. This structured approach to evaluation underscores the advantages of stacking ensemble learning, demonstrating how the combined insights from multiple base models and a meta-learner can lead to robust predictions and meaningful performance metrics.
+
+\vspace{1em}
+
+\noindent
+In ensemble learning, combining different models like Logistic Regression and XGBoost often leads to improved results due to their complementary strengths. Logistic Regression, being a linear model, excels in problems where the relationship between features is linear. It is simple, interpretable, and computationally efficient, making it effective for text-based classification tasks when the relationship between the features (such as word counts or TF-IDF scores) and the target variable is linear. However, Logistic Regression has some limitations: it struggles with capturing complex non-linear relationships and can perform poorly when the data is highly imbalanced or when there are interactions between features that the model cannot capture. On the other hand, XGBoost (Extreme Gradient Boosting) is a powerful tree-based model that can capture complex, non-linear relationships and interactions between features, making it particularly effective for handling large, noisy, and high-dimensional datasets like text. It builds an ensemble of decision trees and iteratively improves the model by minimizing errors. However, XGBoost also has its drawbacks. It requires careful tuning of hyperparameters (e.g., learning rate, number of trees, and tree depth) and can be computationally expensive, especially for large datasets. Additionally, while it can model non-linear relationships well, it lacks the interpretability of simpler models like Logistic Regression. By combining Logistic Regression and XGBoost in an ensemble learning setup, the two models can complement each other. Logistic Regression can provide a robust baseline when the relationships between features are linear, while XGBoost can enhance the model's ability to capture more complex patterns. This hybrid approach leverages the strengths of both models—Logistic Regression's simplicity and speed, alongside XGBoost's power in modeling complex interactions.
 
 
 

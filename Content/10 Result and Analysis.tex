@@ -806,4 +806,70 @@ After performing hyperparameter tuning using RandomizedSearchCV, Logistic Regres
 K-Nearest Neighbors (KNN) performs significantly poorly on this dataset compared to other algorithms, both before and after hyperparameter tuning. The dataset used, which includes Reddit posts with corresponding mental health labels, presents challenges for KNN due to its reliance on distance-based metrics. Specifically, KNN uses the distance between data points to classify them, but this approach is sensitive to the scale and distribution of features. In the case of text data, the feature space can be sparse and high-dimensional, making it difficult for KNN to find meaningful relationships between the posts and their associated mental health labels. After hyperparameter tuning, KNN was optimized with parameters such as \textbf{weights='distance'}, \textbf{n\_neighbors=10}, and \textbf{metric='euclidean'}, yet its performance remains suboptimal. This suggests that KNN struggles with the complexities inherent in text classification tasks, where the relationships between features (such as words or phrases in a Reddit post) are often non-linear and context-dependent. Despite tuning, the algorithm's performance metrics—accuracy, precision, recall, and F1-score—remain notably lower than those of other algorithms like Logistic Regression, Naive Bayes, or SVM. Additionally, KNN's inability to capture these subtleties in language means it performs poorly, particularly in distinguishing between categories like anxiety, bipolar disorder, or PTSD, where the text patterns may be more nuanced. Overall, KNN's reliance on proximity without considering the richer context of textual data likely contributes to its lower performance on this mental health classification task. Other algorithms, particularly those that are more suited for high-dimensional and sparse data (like Logistic Regression or SVM), show much better results as they can better account for the underlying patterns in the Reddit posts.
 
 \pagebreak
+
+\subsection{Results from Ensemble Model Training and Testing}
+
+\begin{center}
+    \textbf{Classification Report for Ensemble Model} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        \textbf{Anxiety}    & 0.96 & 0.93 & 0.95 & 1999 \\ \hline
+        \textbf{Bipolar}    & 0.90 & 0.86 & 0.88 & 1941 \\ \hline
+        \textbf{Depression} & 0.95 & 0.94 & 0.94 & 1959 \\ \hline
+        \textbf{Normal}     & 0.97 & 0.99 & 0.98 & 10679 \\ \hline
+        \textbf{PTSD}       & 0.98 & 0.95 & 0.96 & 1987 \\ \hline
+        \textbf{Accuracy}   & \multicolumn{4}{c|}{\textbf{96.09\%}} \\ \hline
+        \textbf{Macro avg}  & 0.95 & 0.93 & 0.94 & 18565 \\ \hline
+        \textbf{Weighted avg} & 0.96 & 0.96 & 0.96 & 18565 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC AUC Scores for Each Class} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Class} & \textbf{ROC AUC} \\ \hline
+        Anxiety  & 1.0 \\ \hline
+        Bipolar  & 0.99 \\ \hline
+        Depression & 0.99 \\ \hline
+        Normal   & 1.0 \\ \hline
+        PTSD     & 1.0 \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+The classification report provides an insightful summary of the ensemble model's performance, which combines Logistic Regression and XGBoost to classify mental health issues. Precision is a key metric that measures the proportion of correctly predicted positive cases out of all the positive predictions made by the model. For example, a precision of 0.96 for anxiety means that when the model predicts anxiety, it is correct 96\% of the time. Recall, on the other hand, reflects the model's ability to identify all actual positive cases in the dataset. A recall of 0.93 for anxiety suggests that the model correctly identifies 93\% of all true anxiety cases. The F1-score, which balances precision and recall, is also an important metric. With an F1-score of 0.95 for anxiety, the model strikes a good balance between precision and recall, indicating that it performs well across both metrics. Support represents the number of actual instances of a class in the dataset, and for anxiety, there are 1999 instances in the test set. The model's overall accuracy is 96.09\%, meaning that it correctly predicts the mental health condition for 96.09\% of the test instances, reflecting the overall effectiveness of the model. The macro average, which takes the unweighted mean of precision, recall, and F1-scores across all classes, shows an average precision of 0.95, recall of 0.93, and F1-score of 0.94. This provides a general idea of the model's performance across all classes without accounting for class imbalance. The weighted average, however, adjusts for the class distribution by giving more weight to classes with more instances. The weighted averages for precision, recall, and F1-score are all 0.96, reflecting strong overall performance, especially when considering the differing class sizes. The ROC AUC scores are another key performance indicator that evaluates the model's ability 
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM CM.png}  
+    \caption{Confusion Matrix for Ensemble Model}
+    \label{dfdl3123}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM ROC.png}  
+    \caption{ROC AUC Curve for Ensemble Model}
+    \label{dfdl12443}  % Label for referencing the figure
+\end{figure}
+
+\noindent
+to distinguish between different classes. The AUC score ranges from 0 to 1, with 1 representing perfect classification. A perfect AUC score of 1.0 for anxiety, normal, and PTSD indicates that the model can perfectly differentiate between these classes and others. The AUC scores for bipolar and depression are 0.99, which is almost perfect, further demonstrating the model's strong performance across all classes. Overall, these metrics indicate that the ensemble model is highly effective at classifying mental health issues, with robust precision, recall, and the ability to distinguish between the different conditions. The confusion matrix will provide insight into the number of false positives, false negatives, true positives, and true negatives for each class. By looking at the confusion matrix, you can better understand where the model might be misclassifying certain classes, such as when it confuses anxiety with depression or bipolar with PTSD. For example, a high number of false positives in the anxiety class would mean the model is often predicting anxiety when it's actually a different mental health condition. Conversely, a high number of false negatives would mean the model is missing anxiety cases. The combination of logistic regression and XGBoost allows the ensemble model to leverage the strengths of both algorithms. While logistic regression is simple and interpretable, it might struggle with non-linearities in the data. XGBoost, on the other hand, is a powerful gradient boosting algorithm that can capture complex patterns in the data. By stacking their predictions, the ensemble model benefits from both simplicity and complexity, achieving higher accuracy and robustness in text-based classification tasks.
+
+\vspace{1em}
+
+\noindent
+This ensemble model, combining Logistic Regression and XGBoost, is highly effective for the mental health classification web application due to its ability to leverage the strengths of both algorithms. Logistic Regression provides a simple yet powerful linear approach to classification, offering interpretability and efficiency, while XGBoost excels at handling complex, non-linear relationships with its gradient boosting framework, enabling better accuracy and robustness. By stacking these models, the ensemble approach mitigates the individual weaknesses of each algorithm—Logistic Regression's limitations in capturing non-linear patterns and XGBoost's susceptibility to overfitting on small datasets—resulting in a more balanced, accurate, and generalizable model. This synergy ensures that the mental health classification web application delivers reliable, high-precision predictions across diverse text-based inputs.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM RESULT.png}  
+    \caption{Comparison of results from original and ensemble models}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+
+
 % ------------------------ Result and Analysis Ends -------------------------

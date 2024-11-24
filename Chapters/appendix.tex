@@ -877,6 +877,118 @@ def classify_text_retrain_model(text):
 This code provides a system for updating a dataset with new text data, retraining a Logistic Regression model based on the updated data, and classifying new input text while also retraining the model. The \texttt{update\_dataset} function appends new text and its associated mental health issue to an existing CSV file. If the dataset doesn't already exist, it creates a new one with columns for the text, the mental health issue, and the cleaned version of the text. The text is then cleaned (in this case, by converting it to lowercase). After updating the dataset, the function saves it back to the CSV file. The \texttt{retrain\_model} function reads the dataset, ensures it contains the necessary columns, cleans the data by removing any rows with missing values, and preprocesses the text using a \texttt{CountVectorizer}. It splits the dataset into training and testing sets, then trains a Logistic Regression model. The model and vectorizer are saved to disk using \texttt{joblib}, and the function returns the trained model and its accuracy on the test set. The \texttt{update\_and\_retrain} function combines these operations, first calling \texttt{update\_dataset} to add new data, then displaying the last three rows of the updated dataset using Streamlit's \texttt{st.write}, and finally retraining the model. If successful, it shows the retrained model's accuracy. The \texttt{classify\_text\_retrain\_model} function takes an input text, vectorizes it using the pre-trained vectorizer, and uses the trained model to predict the probability of different mental health issues. It converts these probabilities into a DataFrame and identifies the mental health issue with the highest probability. The function displays this prediction along with its associated probability and calls another function, \texttt{get\_wellbeing\_insight}, to provide additional insights. Finally, it calls \texttt{update\_and\_retrain} to update the dataset and retrain the model with the new prediction.
 
 \pagebreak
+% --------- ENSEMBLE MODEL 
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Applying Ensemble Model] 
+    \begin{lstlisting}[language=Python]
+# Preprocess the input for both models
+lr_features = lr_vectorizer.transform([text])  # For Logistic Regression
+xgb_features = tfidf_vectorizer.transform([text])  # For XGBoost
+
+# Get probabilities from base models
+lr_proba = lr_model.predict_proba(lr_features)
+xgb_proba = xgb_model.predict_proba(xgb_features)
+
+# Combine probabilities as input for the meta-learner
+stacked_features = np.hstack((lr_proba, xgb_proba))
+
+# Predict using the meta-learner
+final_prediction_proba = meta_learner.predict_proba(stacked_features)
+final_prediction = meta_learner.predict(stacked_features)
+
+# Decode the predicted label
+top_issue = label_encoder.inverse_transform(final_prediction)[0]
+top_probability = final_prediction_proba[0].max()
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The above code implements an ensemble learning strategy to classify mental health issues using a combination of Logistic Regression (LR) and XGBoost models. First, the input text is preprocessed separately for each model using respective vectorizers (\texttt{lr\_vectorizer} for LR and \texttt{tfidf\_vectorizer} for XGBoost). The predicted probabilities (\texttt{predict\_proba}) from both models are obtained and concatenated to form a combined feature vector (\texttt{stacked\_features}). This vector serves as input to a meta-learner, which uses these combined probabilities to make the final classification (\texttt{final\_prediction}) and compute the confidence level \\(\texttt{final\_prediction\_proba}). The result is then decoded using a label encoder to determine the most likely mental health issue and its corresponding probability. This approach ensures robust predictions by leveraging the strengths of both base models and improves classification accuracy by combining their individual outputs in a unified manner.
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Retraining the Ensemble Model]
+    \begin{lstlisting}[language=Python]
+def retrain_model():
+    """Retrain the ensemble model with the updated dataset."""
+    # Load the Logistic Regression model and vectorizer
+    with open('LRmodel.pkl', 'rb') as file:
+        lr_model = pickle.load(file)
+
+    with open('LRvectorizer.pkl', 'rb') as file:
+        lr_vectorizer = pickle.load(file)
+
+    # Load the XGBoost model, label encoder, and TF-IDF vectorizer
+    with open('xgb_model.pkl', 'rb') as file:
+        xgb_model = pickle.load(file)
+
+    with open('label_encoder.pkl', 'rb') as file:
+        label_encoder = pickle.load(file)
+
+    with open('tfidf_vectorizer.pkl', 'rb') as file:
+        tfidf_vectorizer = pickle.load(file)
+
+    # Load the updated dataset
+    data = pd.read_csv(dataset_path)
+
+    # Ensure required columns exist
+    if 'cleaned_text' not in data.columns or 'mental_health_issue' not in data.columns:
+        st.error("Dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
+        return None, None
+
+    # Preprocessing
+    data.dropna(subset=['cleaned_text'], inplace=True) 
+    # Split features and target
+    X_test = data['cleaned_text']
+    y_test = data['mental_health_issue']
+    # Encode target labels
+    y_test = label_encoder.transform(y_test)
+
+    # Transform the text using the respective vectorizers
+    X_test_lr = lr_vectorizer.transform(X_test)  # Logistic Regression vectorizer
+    X_test_xgb = tfidf_vectorizer.transform(X_test)  # XGBoost vectorizer
+
+    # Get predictions from the base models
+    lr_predictions_proba = lr_model.predict_proba(X_test_lr)
+    xgb_predictions_proba = xgb_model.predict_proba(X_test_xgb)
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Retraining the Ensemble Model]
+    \begin{lstlisting}[language=Python]
+    # Combine predictions as new features
+    stacked_features = np.hstack((lr_predictions_proba, xgb_predictions_proba))
+
+    # Train meta-learner using combined features (optional step if not pre-trained)
+    X_train_meta, y_train_meta = stacked_features, y_test  # Example using test data as meta-training data
+    meta_learner = LogisticRegression(max_iter=5000)
+    meta_learner.fit(X_train_meta, y_train_meta)
+
+    # Save the trained meta-learner
+    with open('meta_learner.pkl', 'wb') as file:
+        pickle.dump(meta_learner, file)
+
+    # Load the pre-trained meta-learner
+    with open('meta_learner.pkl', 'rb') as file:
+        meta_learner = pickle.load(file)
+
+    # Predict using the meta-learner
+    final_predictions = meta_learner.predict(stacked_features)
+
+    # Evaluate the ensemble model
+    accuracy = accuracy_score(y_test, final_predictions)
+    return meta_learner, accuracy
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+The above function, \texttt{retrain\_model}, is designed to retrain an ensemble learning model using an updated dataset. Initially, it loads the base models (Logistic Regression and XGBoost), along with their respective vectorizers and label encoder, from previously saved pickle files. After loading the updated dataset, it checks for required columns, preprocesses the data, and splits it into features (\texttt{X\_test}) and target labels (\texttt{y\_test}). The target labels are encoded using the label encoder, while the text features are transformed using the corresponding vectorizers. Predictions from the base models are then combined into a single feature set (\texttt{stacked\_features}) to be used for retraining the meta-learner. The meta-learner is a Logistic Regression model that learns to combine base model predictions effectively. Once trained, the meta-learner is saved for future use, and its performance is evaluated using accuracy. The function returns the trained meta-learner and its accuracy, ensuring that the ensemble model adapts dynamically to any updates in the dataset.
+
+
+
+
+
+% --------- ENSEMBLE MODEL
+
+
+\pagebreak
 
 \begin{figure}[h!]  
     \centering
