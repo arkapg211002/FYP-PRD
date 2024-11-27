@@ -879,107 +879,116 @@ This code provides a system for updating a dataset with new text data, retrainin
 \pagebreak
 % --------- ENSEMBLE MODEL 
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Applying Ensemble Model] 
-    \begin{lstlisting}[language=Python]
-# Preprocess the input for both models
-lr_features = lr_vectorizer.transform([text])  # For Logistic Regression
-xgb_features = tfidf_vectorizer.transform([text])  # For XGBoost
-
-# Get probabilities from base models
-lr_proba = lr_model.predict_proba(lr_features)
-xgb_proba = xgb_model.predict_proba(xgb_features)
-
-# Combine probabilities as input for the meta-learner
-stacked_features = np.hstack((lr_proba, xgb_proba))
-
-# Predict using the meta-learner
-final_prediction_proba = meta_learner.predict_proba(stacked_features)
-final_prediction = meta_learner.predict(stacked_features)
-
-# Decode the predicted label
-top_issue = label_encoder.inverse_transform(final_prediction)[0]
-top_probability = final_prediction_proba[0].max()
-    \end{lstlisting}
-\end{tcolorbox}
-
-\noindent
-The above code implements an ensemble learning strategy to classify mental health issues using a combination of Logistic Regression (LR) and XGBoost models. First, the input text is preprocessed separately for each model using respective vectorizers (\texttt{lr\_vectorizer} for LR and \texttt{tfidf\_vectorizer} for XGBoost). The predicted probabilities (\texttt{predict\_proba}) from both models are obtained and concatenated to form a combined feature vector (\texttt{stacked\_features}). This vector serves as input to a meta-learner, which uses these combined probabilities to make the final classification (\texttt{final\_prediction}) and compute the confidence level \\(\texttt{final\_prediction\_proba}). The result is then decoded using a label encoder to determine the most likely mental health issue and its corresponding probability. This approach ensures robust predictions by leveraging the strengths of both base models and improves classification accuracy by combining their individual outputs in a unified manner.
-
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Retraining the Ensemble Model]
     \begin{lstlisting}[language=Python]
 def retrain_model():
-    """Retrain the ensemble model with the updated dataset."""
-    # Load the Logistic Regression model and vectorizer
+    # Load Logistic Regression model and vectorizer
     with open('LRmodel.pkl', 'rb') as file:
         lr_model = pickle.load(file)
 
     with open('LRvectorizer.pkl', 'rb') as file:
         lr_vectorizer = pickle.load(file)
 
-    # Load the XGBoost model, label encoder, and TF-IDF vectorizer
+    # Load SVM model and vectorizer
+    with open('SVMmodel.pkl', 'rb') as file:
+        svm_model = pickle.load(file)
+
+    with open('SVMvectorizer.pkl', 'rb') as file:
+        svm_vectorizer = pickle.load(file)
+
+    # Load XGBoost model, vectorizer, and label encoder
     with open('xgb_model.pkl', 'rb') as file:
         xgb_model = pickle.load(file)
-
-    with open('label_encoder.pkl', 'rb') as file:
-        label_encoder = pickle.load(file)
 
     with open('tfidf_vectorizer.pkl', 'rb') as file:
         tfidf_vectorizer = pickle.load(file)
 
-    # Load the updated dataset
-    data = pd.read_csv(dataset_path)
+    with open('label_encoder.pkl', 'rb') as file:
+        label_encoder = pickle.load(file)
 
-    # Ensure required columns exist
-    if 'cleaned_text' not in data.columns or 'mental_health_issue' not in data.columns:
-        st.error("Dataset must have 'cleaned_text' and 'mental_health_issue' columns.")
-        return None, None
+    # Load LSTM model, tokenizer, and label encoder
+    lstm_model = load_model('lstm_model.h5')
 
-    # Preprocessing
-    data.dropna(subset=['cleaned_text'], inplace=True) 
+    with open('LSTM_tokenizer.pkl', 'rb') as file:
+        lstm_tokenizer = pickle.load(file)
+
+    # Load Naive Bayes model and vectorizer
+    with open('NBmodel.pkl', 'rb') as file:
+        nb_model = pickle.load(file)
+
+    with open('NBvectorizer.pkl', 'rb') as file:
+        nb_vectorizer = pickle.load(file)
+
+    # Load the test dataset
+    data = pd.read_csv('preprocessed_mental_health.csv')
+
+    # Check if 'cleaned_text' column exists
+    if 'cleaned_text' not in data.columns:
+        raise ValueError("The dataset must have a 'cleaned_text' column.")
+    \end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Retraining the Ensemble Model]
+    \begin{lstlisting}[language=Python]
+    # Remove rows with missing values in 'cleaned_text'
+    data.dropna(subset=['cleaned_text'], inplace=True)
+
     # Split features and target
     X_test = data['cleaned_text']
     y_test = data['mental_health_issue']
+
     # Encode target labels
     y_test = label_encoder.transform(y_test)
 
-    # Transform the text using the respective vectorizers
+    # Process the text for each model
     X_test_lr = lr_vectorizer.transform(X_test)  # Logistic Regression vectorizer
+    X_test_svm = svm_vectorizer.transform(X_test)  # SVM vectorizer
     X_test_xgb = tfidf_vectorizer.transform(X_test)  # XGBoost vectorizer
+    X_test_nb = nb_vectorizer.transform(X_test)  # Naive Bayes vectorizer
+    X_test_lstm = lstm_tokenizer.texts_to_sequences(X_test)  # LSTM tokenizer
+
+    # Pad sequences for LSTM
+    X_test_lstm = pad_sequences(X_test_lstm, maxlen=100, padding='post', truncating='post')
 
     # Get predictions from the base models
-    lr_predictions_proba = lr_model.predict_proba(X_test_lr)
-    xgb_predictions_proba = xgb_model.predict_proba(X_test_xgb)
+    lr_predictions_proba = lr_model.predict_proba(X_test_lr)  # Logistic Regression probabilities
+    svm_predictions_proba = svm_model.predict_proba(X_test_svm)  # SVM probabilities
+    xgb_predictions_proba = xgb_model.predict_proba(X_test_xgb)  # XGBoost probabilities
+    nb_predictions_proba = nb_model.predict_proba(X_test_nb)  # Naive Bayes probabilities
+    lstm_predictions_proba = lstm_model.predict(X_test_lstm)  # LSTM probabilities
+
+    # Stack the predictions of all models to create the feature matrix for the meta-learner
+    stacked_features = np.hstack((
+        lr_predictions_proba,
+        svm_predictions_proba,
+        xgb_predictions_proba,
+        nb_predictions_proba,
+        lstm_predictions_proba
+    ))
 \end{lstlisting}
 \end{tcolorbox}
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Retraining the Ensemble Model]
     \begin{lstlisting}[language=Python]
-    # Combine predictions as new features
-    stacked_features = np.hstack((lr_predictions_proba, xgb_predictions_proba))
+    # Train the meta-learner (XGBoost as the meta-learner)
+    meta_learner_xgb = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
+    meta_learner_xgb.fit(stacked_features, y_test)
 
-    # Train meta-learner using combined features (optional step if not pre-trained)
-    X_train_meta, y_train_meta = stacked_features, y_test  # Example using test data as meta-training data
-    meta_learner = LogisticRegression(max_iter=5000)
-    meta_learner.fit(X_train_meta, y_train_meta)
+    # Save the trained XGBoost meta-learner
+    with open('meta_learner_xgb.pkl', 'wb') as file:
+        pickle.dump(meta_learner_xgb, file)
 
-    # Save the trained meta-learner
-    with open('meta_learner.pkl', 'wb') as file:
-        pickle.dump(meta_learner, file)
+    # Predict using the XGBoost meta-learner
+    final_predictions_xgb = meta_learner_xgb.predict(stacked_features)
 
-    # Load the pre-trained meta-learner
-    with open('meta_learner.pkl', 'rb') as file:
-        meta_learner = pickle.load(file)
+    # Evaluate the XGBoost ensemble model
+    accuracy_xgb = accuracy_score(y_test, final_predictions_xgb)
 
-    # Predict using the meta-learner
-    final_predictions = meta_learner.predict(stacked_features)
-
-    # Evaluate the ensemble model
-    accuracy = accuracy_score(y_test, final_predictions)
-    return meta_learner, accuracy
+    return meta_learner_xgb, accuracy_xgb
     \end{lstlisting}
 \end{tcolorbox}
 
 \noindent
-The above function, \texttt{retrain\_model}, is designed to retrain an ensemble learning model using an updated dataset. Initially, it loads the base models (Logistic Regression and XGBoost), along with their respective vectorizers and label encoder, from previously saved pickle files. After loading the updated dataset, it checks for required columns, preprocesses the data, and splits it into features (\texttt{X\_test}) and target labels (\texttt{y\_test}). The target labels are encoded using the label encoder, while the text features are transformed using the corresponding vectorizers. Predictions from the base models are then combined into a single feature set (\texttt{stacked\_features}) to be used for retraining the meta-learner. The meta-learner is a Logistic Regression model that learns to combine base model predictions effectively. Once trained, the meta-learner is saved for future use, and its performance is evaluated using accuracy. The function returns the trained meta-learner and its accuracy, ensuring that the ensemble model adapts dynamically to any updates in the dataset.
+The above function, \texttt{retrain\_model}, is designed to retrain an ensemble learning model using an updated dataset. Initially, it loads multiple base models (Logistic Regression, SVM, XGBoost, Naive Bayes, and LSTM) along with their respective vectorizers, tokenizers, and label encoder from previously saved pickle files. The function then loads and preprocesses the updated dataset, ensuring it contains the necessary text column (\texttt{cleaned\_text}) and splitting it into features (\texttt{X\_test}) and target labels (\texttt{y\_test}). The target labels are encoded using the label encoder, while the text features are transformed using the corresponding vectorizers or tokenizers for each model. Predictions from each model are then collected, stacked together, and used to train the meta-learner, an XGBoost classifier. Once trained, the meta-learner is saved for future use, and its performance is evaluated using accuracy. The function returns the trained XGBoost meta-learner and its accuracy score, allowing for the dynamic adaptation of the ensemble model to any updates in the dataset.
+
 
 
 
@@ -1085,16 +1094,11 @@ try:
     \end{lstlisting}
 \end{tcolorbox}
 
-\textbf{Explanation:}
-
-\begin{enumerate}
-    \item \texttt{detect\_emotions\_from\_frame(frame)}: This function uses the \texttt{DeepFace} library to detect the dominant emotion from a given video frame. If no emotion is detected or an error occurs, it returns \texttt{None}.
-    \item \texttt{analyze\_emotions\_from\_frames(frames)}: This function iterates through multiple frames of a video, applies \texttt{detect\_emotions\_from\_frame} to each frame, and counts the frequency of detected emotions in a dictionary.
-    \item \texttt{display\_emotion\_summary(emotion\_counts)}: This function displays a summary of detected emotions in a table format using Streamlit. It also identifies the dominant emotion with the highest count.
-    \item \texttt{analyze\_with\_gemini(dominant\_emotion, emotion\_counts)}: This function communicates with the Gemini API. It prepares a prompt summarizing the emotion analysis, sends it to the API, and displays the response in Streamlit. It also handles potential errors during API interaction.
-\end{enumerate}
+\noindent
+The functions in the code work together to analyze emotions from video frames. The detect\_emotions\_from\_frame(frame) function utilizes the DeepFace library to detect the dominant emotion in a given video frame, returning None if no emotion is detected or an error occurs. The analyze\_emotions\_from\_frames(frames) function iterates over multiple video frames, applying detect\_emotions\_from\_frame to each and counting the frequency of detected emotions in a dictionary. The display\_emotion\_summary(emotion\_counts) function uses Streamlit to display a summary of detected emotions in a table format and identifies the dominant emotion with the highest count. Lastly, analyze\_with\_gemini(dominant\_emotion, emotion\_counts) communicates with the Gemini API by preparing a prompt based on the emotion analysis, sending it to the API, and displaying the response in Streamlit, while also handling any potential errors during the API interaction.
 
 
+\vspace{1em}
 \noindent
 The DeepFace Python module is a comprehensive framework for facial recognition and facial attribute analysis using deep learning. It provides a high-level interface to process and analyze facial data through a variety of pre-trained deep learning models. The module is designed to make facial recognition, emotion detection, age estimation, and gender detection straightforward by abstracting the complexities of deep learning. DeepFace supports multiple state-of-the-art face recognition models, including VGG-Face, Google FaceNet, OpenFace, Facebook DeepFace, and Dlib. Users can choose any of these models depending on their specific requirements. It also integrates with various facial attribute models for emotion analysis, enabling it to classify emotions such as happiness, sadness, anger, and more. The module uses TensorFlow and Keras as its backend frameworks to run deep learning operations efficiently. At its core, DeepFace operates by detecting and aligning faces in an image using a pre-trained facial detector, ensuring consistent positioning before feeding the face into recognition or analysis pipelines. This preprocessing step is critical because it eliminates variability caused by head tilt, lighting, and facial orientation. For emotion detection specifically, DeepFace uses a softmax classifier at the final layer of its models to predict probabilities for different emotions. DeepFace is also known for its flexibility and simplicity. Users can invoke facial analysis or recognition with a single line of code. Additionally, the module includes an \textbf{analyze} function for emotion, age, and gender detection, as well as a \textbf{verify} function to compare two images for identity matching. It also allows users to toggle between facial detectors, including OpenCV, SSD, and MTCNN, depending on their hardware and processing needs. The module emphasizes usability with optional parameters for tuning accuracy, speed, and error handling. For example, users can enable or disable facial detection enforcement, which is useful in scenarios where non-human faces or partial occlusions are present. The ability to batch process multiple images and integrate seamlessly with large datasets makes DeepFace a preferred choice for production-level applications. Overall, DeepFace abstracts the complexities of implementing deep learning models for facial analysis, providing a user-friendly and powerful tool for a variety of facial recognition and emotion detection tasks.
 

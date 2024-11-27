@@ -808,7 +808,7 @@ K-Nearest Neighbors (KNN) performs significantly poorly on this dataset compared
 \pagebreak
 
 \subsection{Results from Ensemble Model Training and Testing}
-
+\subsubsection{Logistic Regression and XGBoost}
 \begin{center}
     \textbf{Classification Report for Ensemble Model} \\[0.5em]
     \begin{tabular}{|c|c|c|c|c|c|}
@@ -866,10 +866,74 @@ This ensemble model, combining Logistic Regression and XGBoost, is highly effect
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM RESULT.png}  
-    \caption{Comparison of results from original and ensemble models}
+    \caption{Comparison of results from LR, XGB and Ensemble Model}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\subsubsection{Logistic Regression, SVM, Naive Bayes, XGBoost, LSTM}
+
+\begin{center}
+    \textbf{Classification Report} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        \textbf{Anxiety}    & 1.00 & 1.00 & 1.00 & 1999 \\ \hline
+        \textbf{Bipolar}    & 1.00 & 1.00 & 1.00 & 1941 \\ \hline
+        \textbf{Depression} & 1.00 & 1.00 & 1.00 & 1959 \\ \hline
+        \textbf{Normal}     & 1.00 & 1.00 & 1.00 & 10679 \\ \hline
+        \textbf{PTSD}       & 1.00 & 1.00 & 1.00 & 1987 \\ \hline
+        \textbf{Accuracy}   & \multicolumn{4}{c|}{\textbf{99.59\%}} \\ \hline
+        \textbf{Macro avg}  & 1.00 & 1.00 & 1.00 & 18565 \\ \hline
+        \textbf{Weighted avg} & 1.00 & 1.00 & 1.00 & 18565 \\ \hline
+    \end{tabular}
+\end{center}
+
+\pagebreak
+\begin{center}
+    \textbf{ROC AUC Scores for Each Class} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Class} & \textbf{ROC AUC} \\ \hline
+        Anxiety  & 1.0 \\ \hline
+        Bipolar  & 1.0 \\ \hline
+        Depression & 1.0 \\ \hline
+        Normal   & 1.0 \\ \hline
+        PTSD     & 1.0 \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+Each row of the matrix represents the true class, while each column represents the predicted class. The diagonal elements (1997, 1936, 1959, 10671, 1987) show the number of correct predictions for each class (anxiety, bipolar, depression, normal, PTSD), while the off-diagonal elements represent misclassifications. For example, the model misclassified 2 samples from the anxiety class as depression and 1 sample from the bipolar class as normal, but overall, the model made very few misclassifications. An ROC AUC score of 1.0 indicates perfect classification performance for each class, meaning that the model has perfectly separated the classes based on the probability predictions. This reinforces the outstanding performance of the XGBoost model.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/EM4 CM.png}  
+    \caption{Confusion Matrix for multiple models in Ensemble Model}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM4 ROC.png}  
+    \caption{ROC AUC Curve for multiple models in ensemble model}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM4 RESULT.png}  
+    \caption{Comparison of results from LR, NB, SVM, XGB, LSTM and Ensemble Model}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
 
+\noindent
+Using XGBoost as a meta-learner in an ensemble model is a strategic decision that brings several advantages, both in terms of performance and interpretability. To understand why XGBoost is an excellent choice, it is important to first appreciate the concept of a meta-learner and how ensemble learning works. Ensemble learning involves combining multiple base models to improve prediction accuracy by leveraging their individual strengths. In a typical ensemble method, the predictions of several base models (e.g., logistic regression, SVM, Naive Bayes, LSTM) are used as input features for a meta-learner, which then learns how to best combine these predictions to make a final decision. The meta-learner's role is to determine which base model's predictions are more reliable for each sample, thus improving the overall performance of the ensemble. XGBoost, a gradient boosting algorithm, has several features that make it an ideal candidate for a meta-learner in this context. First, XGBoost is known for its ability to handle complex relationships in data, especially in terms of interactions between features. Unlike simpler models like logistic regression or Naive Bayes, XGBoost builds decision trees iteratively, where each new tree is focused on correcting the errors made by the previous trees. This iterative approach allows XGBoost to capture non-linear patterns and subtle interactions that might be missed by individual base models. When used as a meta-learner, XGBoost can intelligently combine the predictions from the base models by learning the optimal way to weigh the output of each base model. This is especially important in a multi-model setting where different classifiers might have complementary strengths—XGBoost can effectively "learn" when to trust each model's prediction more, depending on the characteristics of the input data. Another advantage of using XGBoost as a meta-learner is its regularization capabilities. XGBoost includes both L1 and L2 regularization, which helps prevent overfitting. In the context of ensemble learning, this is particularly useful because, with multiple models contributing to the final prediction, the meta-learner needs to ensure it doesn't overly rely on any one base model, especially if that model is prone to overfitting. By applying regularization, XGBoost encourages the model to generalize well, ensuring that the ensemble is robust and does not become overly sensitive to the training data or to noise.
+
+\vspace{1em}
+\noindent
+Additionally, XGBoost is highly efficient in terms of both computation and memory usage. It is designed to work well with large datasets, and its ability to handle sparse data effectively makes it a good fit for a wide variety of tasks, including those involving textual data or other high-dimensional inputs. In ensemble models, where multiple base models generate a large number of features (e.g., prediction probabilities from each base model), XGBoost’s efficiency in processing these features allows it to scale well even as the number of base models or the size of the dataset grows. Another key benefit is XGBoost’s ability to handle imbalanced datasets. Many classification tasks, especially in medical or mental health data, suffer from class imbalances, where some classes (e.g., “Normal”) are more frequent than others (e.g., “Bipolar” or “PTSD”). XGBoost has built-in features to adjust for class imbalances, such as using class weights or employing custom loss functions. This is important in a meta-learner context because the base models might not be equally effective across all classes. XGBoost can ensure that the ensemble model doesn't bias its predictions toward the majority class, which is crucial for improving the overall classification performance, especially for underrepresented classes.  Furthermore, XGBoost provides excellent interpretability through feature importance scores. In an ensemble model, where several base models contribute to the final prediction, understanding how each base model influences the outcome is valuable for both improving the model and for explaining its behavior. XGBoost offers built-in tools to analyze the importance of individual features (in this case, the predictions of the base models), allowing practitioners to understand how the meta-learner is making decisions and which base models are contributing the most to its predictions. Lastly, XGBoost’s performance in various machine learning competitions has demonstrated its robustness. It is one of the top-performing algorithms in tasks such as classification and regression, often outperforming other methods, including random forests and neural networks. Its popularity and track record make it a safe and reliable choice for a meta-learner.
+
+\pagebreak
 
 % ------------------------ Result and Analysis Ends -------------------------
