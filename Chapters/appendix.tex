@@ -885,37 +885,31 @@ def retrain_model():
     # Load Logistic Regression model and vectorizer
     with open('LRmodel.pkl', 'rb') as file:
         lr_model = pickle.load(file)
-
     with open('LRvectorizer.pkl', 'rb') as file:
         lr_vectorizer = pickle.load(file)
 
     # Load SVM model and vectorizer
     with open('SVMmodel.pkl', 'rb') as file:
         svm_model = pickle.load(file)
-
     with open('SVMvectorizer.pkl', 'rb') as file:
         svm_vectorizer = pickle.load(file)
 
     # Load XGBoost model, vectorizer, and label encoder
     with open('xgb_model.pkl', 'rb') as file:
         xgb_model = pickle.load(file)
-
     with open('tfidf_vectorizer.pkl', 'rb') as file:
         tfidf_vectorizer = pickle.load(file)
-
     with open('label_encoder.pkl', 'rb') as file:
         label_encoder = pickle.load(file)
 
     # Load LSTM model, tokenizer, and label encoder
     lstm_model = load_model('lstm_model.h5')
-
     with open('LSTM_tokenizer.pkl', 'rb') as file:
         lstm_tokenizer = pickle.load(file)
 
     # Load Naive Bayes model and vectorizer
     with open('NBmodel.pkl', 'rb') as file:
         nb_model = pickle.load(file)
-
     with open('NBvectorizer.pkl', 'rb') as file:
         nb_vectorizer = pickle.load(file)
 
@@ -968,31 +962,28 @@ def retrain_model():
 \end{tcolorbox}
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Retraining the Ensemble Model]
     \begin{lstlisting}[language=Python]
-    # Train the meta-learner (XGBoost as the meta-learner)
-    meta_learner_xgb = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
-    meta_learner_xgb.fit(stacked_features, y_test)
+    # Define the Logistic Regression model for the meta-learner
+    meta_learner_lr = LogisticRegression(max_iter=5000)
+    
+    # Train the Logistic Regression meta-learner on the full dataset
+    meta_learner_lr.fit(stacked_features, y_test)
+    
+    # Save the trained Logistic Regression meta-learner
+    with open('meta_learner_lr.pkl', 'wb') as file:
+        pickle.dump(meta_learner_lr, file)
+    
+    # Predict using the Logistic Regression meta-learner
+    final_predictions_lr = meta_learner_lr.predict(stacked_features)
+    
+    # Evaluate the Logistic Regression ensemble model
+    accuracy_lr = accuracy_score(y_test, final_predictions_lr)
 
-    # Save the trained XGBoost meta-learner
-    with open('meta_learner_xgb.pkl', 'wb') as file:
-        pickle.dump(meta_learner_xgb, file)
-
-    # Predict using the XGBoost meta-learner
-    final_predictions_xgb = meta_learner_xgb.predict(stacked_features)
-
-    # Evaluate the XGBoost ensemble model
-    accuracy_xgb = accuracy_score(y_test, final_predictions_xgb)
-
-    return meta_learner_xgb, accuracy_xgb
+    return meta_learner_lr, accuracy_lr
     \end{lstlisting}
 \end{tcolorbox}
 
 \noindent
-The above function, \texttt{retrain\_model}, is designed to retrain an ensemble learning model using an updated dataset. Initially, it loads multiple base models (Logistic Regression, SVM, XGBoost, Naive Bayes, and LSTM) along with their respective vectorizers, tokenizers, and label encoder from previously saved pickle files. The function then loads and preprocesses the updated dataset, ensuring it contains the necessary text column (\texttt{cleaned\_text}) and splitting it into features (\texttt{X\_test}) and target labels (\texttt{y\_test}). The target labels are encoded using the label encoder, while the text features are transformed using the corresponding vectorizers or tokenizers for each model. Predictions from each model are then collected, stacked together, and used to train the meta-learner, an XGBoost classifier. Once trained, the meta-learner is saved for future use, and its performance is evaluated using accuracy. The function returns the trained XGBoost meta-learner and its accuracy score, allowing for the dynamic adaptation of the ensemble model to any updates in the dataset.
-
-
-
-
-
+The above function, \texttt{retrain\_model}, is designed to retrain an ensemble learning model using an updated dataset. Initially, it loads multiple base models (Logistic Regression, SVM, XGBoost, Naive Bayes, and LSTM) along with their respective vectorizers, tokenizers, and label encoder from previously saved pickle files. The function then loads and preprocesses the updated dataset, ensuring it contains the necessary text column (\texttt{cleaned\_text}) and splitting it into features (\texttt{X\_test}) and target labels (\texttt{y\_test}). The target labels are encoded using the label encoder, while the text features are transformed using the corresponding vectorizers or tokenizers for each model. Predictions from each model are then collected, stacked together, and used to train the meta-learner, a LogisticRegression classifier. Once trained, the meta-learner is saved for future use, and its performance is evaluated using accuracy. The function returns the trained XGBoost meta-learner and its accuracy score, allowing for the dynamic adaptation of the ensemble model to any updates in the dataset.
 
 % --------- ENSEMBLE MODEL
 

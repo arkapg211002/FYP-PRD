@@ -844,14 +844,14 @@ The classification report provides an insightful summary of the ensemble model's
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM CM.png}  
-    \caption{Confusion Matrix for Ensemble Model}
+    \caption{Confusion Matrix for Ensemble Model(LR + XGB)}
     \label{dfdl3123}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM ROC.png}  
-    \caption{ROC AUC Curve for Ensemble Model}
+    \caption{ROC AUC Curve for Ensemble Model(LR + XGB)}
     \label{dfdl12443}  % Label for referencing the figure
 \end{figure}
 
@@ -870,7 +870,7 @@ This ensemble model, combining Logistic Regression and XGBoost, is highly effect
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
-\subsubsection{Logistic Regression, SVM, Naive Bayes, XGBoost, LSTM}
+\subsubsection{Logistic Regression, SVM, Naive Bayes, XGBoost(meta-learner), LSTM}
 
 \begin{center}
     \textbf{Classification Report} \\[0.5em]
@@ -908,21 +908,21 @@ Each row of the matrix represents the true class, while each column represents t
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=0.9\textwidth]{Images/EM4 CM.png}  
-    \caption{Confusion Matrix for multiple models in Ensemble Model}
+    \caption{Confusion Matrix for ensemble model (XGB - meta learner)}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM4 ROC.png}  
-    \caption{ROC AUC Curve for multiple models in ensemble model}
+    \caption{ROC AUC Curve for multiple models in ensemble model (XGB - meta learner)}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM4 RESULT.png}  
-    \caption{Comparison of results from LR, NB, SVM, XGB, LSTM and Ensemble Model}
+    \caption{Comparison of results from LR, NB, SVM, XGB, LSTM and Ensemble Model (XGB - meta learner)}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
@@ -933,6 +933,140 @@ Using XGBoost as a meta-learner in an ensemble model is a strategic decision tha
 \vspace{1em}
 \noindent
 Additionally, XGBoost is highly efficient in terms of both computation and memory usage. It is designed to work well with large datasets, and its ability to handle sparse data effectively makes it a good fit for a wide variety of tasks, including those involving textual data or other high-dimensional inputs. In ensemble models, where multiple base models generate a large number of features (e.g., prediction probabilities from each base model), XGBoost’s efficiency in processing these features allows it to scale well even as the number of base models or the size of the dataset grows. Another key benefit is XGBoost’s ability to handle imbalanced datasets. Many classification tasks, especially in medical or mental health data, suffer from class imbalances, where some classes (e.g., “Normal”) are more frequent than others (e.g., “Bipolar” or “PTSD”). XGBoost has built-in features to adjust for class imbalances, such as using class weights or employing custom loss functions. This is important in a meta-learner context because the base models might not be equally effective across all classes. XGBoost can ensure that the ensemble model doesn't bias its predictions toward the majority class, which is crucial for improving the overall classification performance, especially for underrepresented classes.  Furthermore, XGBoost provides excellent interpretability through feature importance scores. In an ensemble model, where several base models contribute to the final prediction, understanding how each base model influences the outcome is valuable for both improving the model and for explaining its behavior. XGBoost offers built-in tools to analyze the importance of individual features (in this case, the predictions of the base models), allowing practitioners to understand how the meta-learner is making decisions and which base models are contributing the most to its predictions. Lastly, XGBoost’s performance in various machine learning competitions has demonstrated its robustness. It is one of the top-performing algorithms in tasks such as classification and regression, often outperforming other methods, including random forests and neural networks. Its popularity and track record make it a safe and reliable choice for a meta-learner.
+
+
+\vspace{1em}
+
+\noindent
+While using models like XGBoost, SVM, Naive Bayes, and LSTM as meta-learners in ensemble modeling can provide high accuracy, these models can also be prone to \textbf{overfitting}, especially when they are trained on the predictions of multiple base models. Overfitting occurs when the model learns the noise or patterns specific to the training data that do not generalize well to unseen data. For XGBoost, although it is a powerful and highly flexible model, its ability to capture complex relationships between features can lead to overfitting, especially when the base models are already strong. When combined with a large number of features from multiple base models, the XGBoost meta-learner may excessively adjust to small fluctuations in the training data, leading to high performance on the training set but poor generalization to new data. This risk is heightened if the base models already provide overlapping or correlated predictions, which can reinforce irrelevant patterns for the meta-learner.
+
+\vspace{1em}
+
+\noindent
+Similarly, SVM as a meta-learner can overfit in ensemble setups. SVM, especially when using a non-linear kernel, is very sensitive to the scale of features and may become highly specialized to the training data if not properly tuned. When stacking the output of multiple base models, each with its own biases and prediction tendencies, the SVM meta-learner may overemphasize specific instances that are not representative of the general data distribution. This can lead to poor performance on new, unseen data despite strong accuracy on the training set.
+
+\vspace{1em}
+
+\noindent
+Naive Bayes is another model that can overfit when used as a meta-learner. Although it assumes independence between features, stacking it with predictions from base models may violate this assumption, leading to overly optimistic performance during training. Naive Bayes models are particularly sensitive to correlated features, and in an ensemble, where the base models might produce similar predictions, the meta-learner might end up fitting to these correlations too closely. This results in high training accuracy but a significant drop in performance when applied to unseen data.
+
+\vspace{1em}
+
+\noindent
+Finally, LSTM models, although excellent at capturing long-range dependencies in sequential data, can also overfit when used as a meta-learner. LSTMs are prone to memorizing the training data, especially when the number of parameters in the model is large relative to the size of the training set. In ensemble settings, the LSTM meta-learner might overly adapt to the specific features of the training data, particularly when the base models' predictions are very similar, reinforcing the same patterns in the data. This can cause the LSTM meta-learner to perform well on training data but fail to generalize effectively to new data.
+
+\vspace{1em}
+
+\noindent
+In conclusion, while these models can provide high accuracy in ensemble setups, they are also susceptible to overfitting, which can undermine their ability to generalize to new, unseen data. Proper regularization, cross-validation, and tuning of hyperparameters are necessary to mitigate these risks and improve the model's robustness and generalization capabilities.
+
+
+\subsubsection{Logistic Regression(meta-learner), SVM, Naive Bayes, XGBoost, LSTM}
+
+\begin{center}
+    \textbf{Cross-Validation Accuracy Scores} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Cross-Validation Accuracy Scores} & \textbf{Value} \\ \hline
+        1 & 0.97333692 \\ \hline
+        2 & 0.96768112 \\ \hline
+        3 & 0.97091301 \\ \hline
+        4 & 0.96606518 \\ \hline
+        5 & 0.97037436 \\ \hline
+        \textbf{Mean Cross-Validation Accuracy} & \textbf{96.97\%} \\ \hline
+    \end{tabular}
+\end{center}
+
+\pagebreak
+
+\begin{center}
+    \textbf{Classification Report} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        \textbf{Anxiety}    & 0.96 & 0.95 & 0.95 & 1999 \\ \hline
+        \textbf{Bipolar}    & 0.93 & 0.90 & 0.92 & 1941 \\ \hline
+        \textbf{Depression} & 0.95 & 0.95 & 0.95 & 1959 \\ \hline
+        \textbf{Normal}     & 0.98 & 0.99 & 0.99 & 10679 \\ \hline
+        \textbf{PTSD}       & 0.97 & 0.96 & 0.96 & 1987 \\ \hline
+        \textbf{Accuracy}   & \multicolumn{4}{c|}{97.05\%} \\ \hline
+        \textbf{Macro avg}  & 0.96 & 0.95 & 0.95 & 18565 \\ \hline
+        \textbf{Weighted avg} & 0.97 & 0.97 & 0.97 & 18565 \\ \hline
+    \end{tabular}
+\end{center}
+
+\vspace{1em}
+
+\begin{center}
+    \textbf{ROC AUC Scores} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Anxiety} & 1.00 \\ \hline
+        \textbf{Bipolar} & 0.99 \\ \hline
+        \textbf{Depression} & 1.00 \\ \hline
+        \textbf{Normal} & 1.00 \\ \hline
+        \textbf{PTSD} & 1.00 \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+The confusion matrix for the Logistic Regression model shows the performance of the classifier for each of the five mental health issues. For anxiety, 1900 true positives, 24 false positives, 33 false negatives, and 18 true negatives were recorded. This means the model was very accurate in detecting anxiety with minimal errors. Similarly, the bipolar disorder class had 1754 true positives and relatively few misclassifications, indicating high precision and recall. Depression also had a high number of correct predictions with 1857 true positives. The normal class had 10608 true positives and only minor misclassifications, highlighting the model's ability to classify the majority class accurately. The PTSD class showed similar performance with 1899 true positives. Overall, the confusion matrix suggests that the Logistic Regression model is highly effective in correctly classifying mental health conditions with very few errors across all classes. The ROC AUC scores for each class are all exceptionally high, with the anxiety, depression, normal, and PTSD classes achieving a perfect score of 1.00. The bipolar class has a slightly lower but still impressive score of 0.99. These high ROC AUC values indicate that the model is able to distinguish between the different classes with very high accuracy and minimal overlap between the predicted and actual values, ensuring robust model performance.
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM FINAL CM.png}  
+    \caption{Confusion Matrix for Ensemble Model (LR - meta learner)}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM FINAL ROC.png}  
+    \caption{ROC AUC for Ensemble Model (LR - meta learner)}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM FINAL RESULT.png}  
+    \caption{Comparison of results from LR, NB, SVM, XGB, LSTM and Ensemble Model (LR - meta learner)}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\pagebreak
+
+\noindent
+Logistic Regression is also highly effective at combining probabilistic outputs from base models. Since ensemble methods often rely on predictions in the form of probabilities, Logistic Regression is able to leverage these to produce more accurate final predictions. It can weigh the predictions from each base model appropriately, allowing the ensemble to take advantage of the strengths of each model. This ability to combine probabilities is critical when base models have different levels of confidence in their predictions.
+
+\vspace{1em}
+
+\noindent
+Additionally, Logistic Regression is computationally efficient, making it a great choice for large ensembles. Training and inference times for Logistic Regression are relatively fast compared to more complex models like deep neural networks or gradient boosting machines. This efficiency is especially useful when dealing with large numbers of base models in the ensemble, as it ensures that the meta-learner can be trained quickly and can make predictions in real-time.
+
+\vspace{1em}
+
+\noindent
+The regularization capabilities of Logistic Regression are another advantage when used as a meta-learner. Regularization techniques such as L1 and L2 regularization can help prevent overfitting, which is a common issue when combining multiple models. By applying regularization, Logistic Regression ensures that the ensemble does not become too complex or overly tuned to the training data, improving the generalization performance on unseen data.
+
+\vspace{1em}
+
+\noindent
+Moreover, Logistic Regression handles imbalanced data well, which is often a challenge in classification tasks. In ensemble settings, some base models might be more sensitive to the majority class, but Logistic Regression can adjust for class imbalances by applying class weights, ensuring that the ensemble model remains fair and does not favor the dominant class.
+
+\vspace{1em}
+
+\noindent
+Another advantage of Logistic Regression is its ability to handle a large number of input features. In the case of an ensemble model, each base model's prediction can be treated as a feature, and Logistic Regression can effectively combine these features to make the final decision. This makes Logistic Regression versatile and adaptable when working with ensembles composed of diverse models, whether they are based on different algorithms or different data representations.
+
+\vspace{1em}
+
+\noindent
+In summary, Logistic Regression is an ideal choice as a meta-learner in ensemble models because of its simplicity, interpretability, efficiency, and strong performance in combining probabilistic outputs. Its ability to apply regularization, handle imbalanced data, and process multiple features makes it a reliable and effective meta-learner that enhances the performance of the overall ensemble model.
+
+
+
+
+
 
 \pagebreak
 
