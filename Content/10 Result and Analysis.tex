@@ -807,8 +807,60 @@ K-Nearest Neighbors (KNN) performs significantly poorly on this dataset compared
 
 \pagebreak
 
+% ------------------ Different Vectorization ---------
+\subsection{Comparison of different tokenizations}
+\begin{center}
+    \textbf{Model Performance Comparison} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        \textbf{Model} & \textbf{BoW} & \textbf{TFIDF} & \textbf{LIWC} & \textbf{Word2Vec} & \textbf{N-Gram} \\ \hline
+        \textbf{Logistic Regression} & 87.66 & 86.02 & 66.36 & 79.40 & 87.13 \\ \hline
+        \textbf{KNN} & 54.56 & 75.06 & 70.70 & 75.52 & 43.06 \\ \hline
+        \textbf{SVC} & 85.13 & 88.26 & 68.14 & 77.89 & 84.33 \\ \hline
+        \textbf{Naive Bayes} & 83.63 & 79.42 & 59.63 & 60.44 & 81.71 \\ \hline
+        \textbf{Random Forest} & 85.32 & 85.73 & 76.73 & 79.88 & 79.02 \\ \hline
+        \textbf{XGB} & 87.42 & 87.39 & 78.56 & 81.01 & 87.96 \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+In ensemble learning, the goal is to combine multiple base models to improve the overall performance of the system. However, using models like Logistic Regression (LR), Naive Bayes (NB), K-Nearest Neighbors (KNN), Support Vector Machine (SVM), Long Short-Term Memory (LSTM), XGBoost (XGB), and Random Forest (RF) all together as base models in an ensemble is not always feasible. Each of these models has its strengths and weaknesses, and the combination of them can lead to various challenges, particularly in terms of computational efficiency, model size, and accuracy.
+
+\vspace{1em}
+
+\noindent
+For instance, Logistic Regression, Naive Bayes, and SVM work well with simpler vectorization methods like Bag of Words (BoW) because these methods are efficient and provide good results in terms of classification accuracy. On the other hand, more complex models like XGBoost and Random Forest can handle feature extraction methods such as TFIDF (Term Frequency-Inverse Document Frequency) better due to their ability to manage more intricate feature spaces. However, the problem arises when using these models together in a single ensemble. Although SVM with TFIDF can provide high accuracy on its own, it can negatively affect the performance of the final ensemble model. This is likely because the TFIDF features, while effective for models like SVM, may not align well with other base models, such as LR and NB, which rely more on the simpler, sparse representation of the data.
+
+\vspace{1em}
+
+\noindent
+XGBoost, when used with N-Gram features, tends to give the highest accuracy individually, but the model size and computational demands are significantly higher, making it impractical to include in an ensemble. The larger size of the model can lead to slower inference times and increased memory usage, which is particularly problematic in real-time systems or when deploying the model at scale. Additionally, KNN is another model that is not considered as a base model in the ensemble due to its computational intensity. KNN requires the entire training dataset to be stored and does not generalize well to unseen data, and its performance deteriorates as the dataset grows, leading to slow predictions. Thus, including KNN would only further increase the computational cost and reduce the overall performance of the ensemble model.
+
+\vspace{1em}
+
+\noindent
+Random Forest is also omitted as a base model in the ensemble for similar reasons. While Random Forest can perform well as an individual model, it is computationally intensive due to its multiple decision trees and large size, which can lead to longer training and prediction times. When included in an ensemble, its computational overhead would outweigh the benefits, especially if the ensemble consists of already complex models.
+
+\vspace{1em}
+
+\noindent
+The reason for selecting Bag of Words (BoW) for LR, NB, and SVM, and TFIDF for XGBoost lies in the nature of these feature extraction methods and the models themselves. BoW is a simple, yet effective method for converting text data into numerical form. It represents each word as a feature in a vector space, where the value is the frequency of the word in the document. This works well for models like LR, NB, and SVM because they perform better when the features are sparse and straightforward. The simplicity of BoW ensures that these models are not overwhelmed by the sheer number of features, which helps maintain interpretability and reduces computational cost.
+
+\vspace{1em}
+
+\noindent
+On the other hand, TFIDF takes into account not only the frequency of words in a document but also their importance in the entire corpus. Words that occur frequently across many documents are weighted lower, while words that are more specific to a particular document are given more importance. This approach is particularly useful for models like XGBoost, which can handle the more complex and rich feature sets that TFIDF generates. The increased dimensionality of TFIDF features provides a better representation of the data, which XGBoost leverages to improve accuracy. Combining BoW for LR, NB, and SVM with TFIDF for XGBoost ensures that the strengths of both simpler and more complex feature extraction methods are utilized. The simpler methods prevent the models from being overwhelmed by excessive features, while TFIDF provides more nuanced features for XGBoost, leading to improved accuracy.
+
+\vspace{1em}
+
+\noindent
+Ultimately, the combination of \textbf{BoW} and \textbf{TFIDF} strikes a balance between simplicity and complexity, ensuring that each model works efficiently and effectively within the ensemble without causing undue computational strain. This balanced approach helps to maintain both high accuracy and manageable computational requirements, making it the best choice for feature extraction in this scenario.
+
+
+\pagebreak
+
 \subsection{Results from Ensemble Model Training and Testing}
-\subsubsection{Logistic Regression and XGBoost}
+\subsubsection{Ensemble Model 1}
 \begin{center}
     \textbf{Classification Report for Ensemble Model} \\[0.5em]
     \begin{tabular}{|c|c|c|c|c|c|}
@@ -844,14 +896,14 @@ The classification report provides an insightful summary of the ensemble model's
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM CM.png}  
-    \caption{Confusion Matrix for Ensemble Model(LR + XGB)}
+    \caption{Confusion Matrix for Ensemble Model 1}
     \label{dfdl3123}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM ROC.png}  
-    \caption{ROC AUC Curve for Ensemble Model(LR + XGB)}
+    \caption{ROC AUC Curve for Ensemble Model 1}
     \label{dfdl12443}  % Label for referencing the figure
 \end{figure}
 
@@ -866,11 +918,11 @@ This ensemble model, combining Logistic Regression and XGBoost, is highly effect
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM RESULT.png}  
-    \caption{Comparison of results from LR, XGB and Ensemble Model}
+    \caption{Comparison of results from Base and Ensemble Model 1}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
-\subsubsection{Logistic Regression, SVM, Naive Bayes, XGBoost(meta-learner), LSTM}
+\subsubsection{Ensemble Model 2}
 
 \begin{center}
     \textbf{Classification Report} \\[0.5em]
@@ -882,7 +934,7 @@ This ensemble model, combining Logistic Regression and XGBoost, is highly effect
         \textbf{Depression} & 1.00 & 1.00 & 1.00 & 1959 \\ \hline
         \textbf{Normal}     & 1.00 & 1.00 & 1.00 & 10679 \\ \hline
         \textbf{PTSD}       & 1.00 & 1.00 & 1.00 & 1987 \\ \hline
-        \textbf{Accuracy}   & \multicolumn{4}{c|}{\textbf{99.59\%}} \\ \hline
+        \textbf{Accuracy}   & \multicolumn{4}{c|}{\textbf{99.92\%}} \\ \hline
         \textbf{Macro avg}  & 1.00 & 1.00 & 1.00 & 18565 \\ \hline
         \textbf{Weighted avg} & 1.00 & 1.00 & 1.00 & 18565 \\ \hline
     \end{tabular}
@@ -908,21 +960,21 @@ Each row of the matrix represents the true class, while each column represents t
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=0.9\textwidth]{Images/EM4 CM.png}  
-    \caption{Confusion Matrix for ensemble model (XGB - meta learner)}
+    \caption{Confusion Matrix for Ensemble Model 2}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM4 ROC.png}  
-    \caption{ROC AUC Curve for multiple models in ensemble model (XGB - meta learner)}
+    \caption{ROC AUC Curve for Ensemble Model 2}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM4 RESULT.png}  
-    \caption{Comparison of results with Ensemble Model (XGB - meta learner)}
+    \caption{Comparison of results with Ensemble Model 2}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
@@ -961,7 +1013,7 @@ Finally, LSTM models, although excellent at capturing long-range dependencies in
 In conclusion, while these models can provide high accuracy in ensemble setups, they are also susceptible to overfitting, which can undermine their ability to generalize to new, unseen data. Proper regularization, cross-validation, and tuning of hyperparameters are necessary to mitigate these risks and improve the model's robustness and generalization capabilities.
 
 
-\subsubsection{Logistic Regression(meta-learner), SVM, Naive Bayes, XGBoost, LSTM}
+\subsubsection{Ensemble Model 3}
 
 \begin{center}
     \textbf{Cross-Validation Accuracy Scores} \\[0.5em]
@@ -1015,21 +1067,21 @@ The confusion matrix for the Logistic Regression model shows the performance of 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM FINAL CM.png}  
-    \caption{Confusion Matrix for Ensemble Model (LR - meta learner)}
+    \caption{Confusion Matrix for Ensemble Model 3}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM FINAL ROC.png}  
-    \caption{ROC AUC for Ensemble Model (LR - meta learner)}
+    \caption{ROC AUC for Ensemble Model 3}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
 \begin{figure}[h!]  
     \centering
     \includegraphics[width=1.0\textwidth]{Images/EM FINAL RESULT.png}  
-    \caption{Comparison of results with Ensemble Model (LR - meta learner)}
+    \caption{Comparison of results with Ensemble Model 3}
     \label{dfdl1244883}  % Label for referencing the figure
 \end{figure}
 
@@ -1063,11 +1115,313 @@ Another advantage of Logistic Regression is its ability to handle a large number
 \noindent
 In summary, Logistic Regression is an ideal choice as a meta-learner in ensemble models because of its simplicity, interpretability, efficiency, and strong performance in combining probabilistic outputs. Its ability to apply regularization, handle imbalanced data, and process multiple features makes it a reliable and effective meta-learner that enhances the performance of the overall ensemble model.
 
+\subsubsection{Ensemble Model 4}
+
+\begin{center}
+    \textbf{Cross-Validation Accuracy Scores} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Cross-Validation Accuracy Scores} & \textbf{Value} \\ \hline
+        1 & 0.97683814 \\ \hline
+        2 & 0.96902774 \\ \hline
+        3 & 0.98033935 \\ \hline
+        4 & 0.96552653 \\ \hline
+        5 & 0.97306760 \\ \hline
+        \textbf{Mean Cross-Validation Accuracy} & \textbf{97.30\%} \\ \hline
+    \end{tabular}
+\end{center}
+
+\pagebreak
+
+\begin{center}
+    \textbf{Classification Report (Random Forest Meta-Learner)} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        \textbf{Class} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        Anxiety & 0.99 & 0.98 & 0.99 & 1999 \\ \hline
+        Bipolar & 0.98 & 0.97 & 0.98 & 1941 \\ \hline
+        Depression & 0.98 & 0.99 & 0.98 & 1959 \\ \hline
+        Normal & 1.00 & 1.00 & 1.00 & 10679 \\ \hline
+        PTSD & 0.99 & 0.99 & 0.99 & 1987 \\ \hline
+        \textbf{Accuracy} & \multicolumn{4}{c|}{\textbf{99.19\%}} \\ \hline
+        \textbf{Macro Avg} & 0.99 & 0.99 & 0.99 & 18565 \\ \hline
+        \textbf{Weighted Avg} & 0.99 & 0.99 & 0.99 & 18565 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC AUC Scores for Random Forest Meta-Learner} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Class} & \textbf{ROC AUC Score} \\ \hline
+        Anxiety & 1.00 \\ \hline
+        Bipolar & 1.00 \\ \hline
+        Depression & 1.00 \\ \hline
+        Normal & 1.00 \\ \hline
+        PTSD & 1.00 \\ \hline
+    \end{tabular}
+\end{center}
+
+\noindent
+The confusion matrix for the Random Forest Meta-Learner indicates that for the class \textit{Anxiety}, most instances were correctly classified, with only a few misclassifications as \textit{Bipolar}, \textit{Depression}, or \textit{PTSD}. Similarly, for \textit{Bipolar}, a small number of instances were misclassified as \textit{Anxiety} or \textit{Depression}, and for \textit{Depression}, very few instances were misclassified as \textit{Anxiety} or \textit{PTSD}. For the \textit{Normal} class, almost all instances were perfectly classified with only minimal misclassifications, and for \textit{PTSD}, a similar trend of high accuracy was observed. This reflects the robustness of the model in distinguishing between mental health classes with minimal overlap. The Receiver Operating Characteristic (ROC) curves for all classes indicate exceptional performance by the ensemble model, achieving a perfect Area Under the Curve (AUC) score of $1.00$ for each class. This demonstrates that the model is highly effective at distinguishing between positive and negative instances for all mental health classes, without any compromise in sensitivity or specificity. Such a result reflects a balance in the classification task and is indicative of an optimal model with no trade-offs in classification performance.
 
 
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM RF CM.png}  
+    \caption{Confusion Matrix for Ensemble Model 4}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM RF ROC.png}  
+    \caption{ROC AUC for Ensemble Model 4}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM RF RESULT.png}  
+    \caption{Comparison of results for Ensemble Model 4}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\pagebreak
+
+\noindent
+The ensemble model using Random Forest as the meta-learner was chosen for deployment in the web application due to its exceptional ability to handle overfitting and deliver consistent results across diverse datasets. When retrained dynamically using user input, minor fluctuations in accuracy, ranging from 99.15\% to 99.20\%, are observed. These fluctuations occur because Random Forest operates by aggregating predictions from multiple decision trees, and retraining introduces small variations in tree structures or feature importance, depending on the new input data. Such variations, although minor, reflect the natural stochasticity in Random Forest’s training process. Importantly, these accuracy differences are statistically insignificant and have no meaningful impact on the model's practical reliability.
+
+\vspace{1em}
+
+\noindent
+Random Forest is particularly effective at mitigating overfitting because it uses techniques like bootstrapping and random feature selection when constructing decision trees. This ensures that individual trees focus on different aspects of the data, reducing the risk of over-reliance on noise or specific patterns that might lead to overfitting. In contrast, linear models like Logistic Regression are inherently more sensitive to overfitting in high-dimensional spaces or when the data contains multicollinearity. Logistic Regression assumes a linear relationship between features and the target variable, making it less flexible in capturing complex patterns and more prone to memorizing specific data points, especially when regularization techniques are not carefully tuned.
+
+\vspace{1em}
+
+\noindent
+Despite experimenting with alternative configurations, such as N-Gram for XGBoost or TF-IDF for SVM, which achieved accuracies of 99.11\% and 99.16\%, respectively, the selected ensemble model with 99.19\% accuracy remains the optimal choice. The minor accuracy gains offered by the selected model are complemented by its computational efficiency, making it a practical solution for deployment. Random Forest’s robust handling of overfitting and ability to generalize effectively across different inputs further solidify its suitability as the meta-learner, ensuring the web application remains both efficient and reliable in its predictive capabilities.
+
+\pagebreak
+
+\subsubsection{Ensemble Model 5}
+
+\begin{center}
+    \textbf{Classification Report for Bagging Meta-Learner} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        \textbf{Anxiety}    & 1.00 & 1.00 & 1.00 & 1999 \\ \hline
+        \textbf{Bipolar}    & 0.99 & 0.99 & 0.99 & 1941 \\ \hline
+        \textbf{Depression} & 1.00 & 1.00 & 1.00 & 1959 \\ \hline
+        \textbf{Normal}     & 1.00 & 1.00 & 1.00 & 10679 \\ \hline
+        \textbf{PTSD}       & 1.00 & 1.00 & 1.00 & 1987 \\ \hline
+        \textbf{Accuracy}   & \multicolumn{4}{c|}{\textbf{99.77\%}} \\ \hline
+        \textbf{Macro avg}  & 1.00 & 1.00 & 1.00 & 18565 \\ \hline
+        \textbf{Weighted avg} & 1.00 & 1.00 & 1.00 & 18565 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC AUC Scores for Bagging Meta-Learner} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Class} & \textbf{AUC Score} \\ \hline
+        Anxiety        & 0.99 \\ \hline
+        Bipolar        & 0.98 \\ \hline
+        Depression     & 0.99 \\ \hline
+        Normal         & 1.00 \\ \hline
+        PTSD           & 0.99 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/BEM CM.png}  
+    \caption{Confusion Matrix for Ensemble Model 5}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/BEM ROC.png}  
+    \caption{ROC AUC for Ensemble Model 5}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/BEM RESULT.png}  
+    \caption{Comparison of results for Bagging Ensemble Model 5}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\pagebreak
+\noindent
+The classification results for the Bagging Meta-Learner demonstrate exceptional performance, with an accuracy of 99.77\%. The classification report highlights near-perfect precision, recall, and F1-scores for all classes, confirming the model's capability to accurately identify and classify mental health states. Notably, the "Normal" class exhibits perfect classification, while other classes like "Bipolar" and "PTSD" maintain high performance with marginal errors. The confusion matrix reveals minimal misclassifications. For example, in the "Anxiety" class, only a few instances are misclassified into other categories, and the same applies to other classes. These results emphasize the robustness of the Bagging Meta-Learner in handling imbalanced or complex datasets. The ROC AUC scores, ranging from 0.98 to 1.00, further confirm the model's strength in distinguishing between classes. The perfect score for the "Normal" class and near-perfect scores for other classes indicate an excellent trade-off between sensitivity and specificity. These metrics highlight the suitability of the Bagging Meta-Learner for deployment in applications requiring reliable and consistent predictions.
+
+\vspace{1em}
+
+\noindent
+Bagging classifiers, while highly effective at improving predictive accuracy, have a tendency to overfit the training data when used as meta-learners in ensemble models. This is due to the way bagging works, which involves training multiple base models on bootstrapped subsets of the training data and averaging their predictions. Although this method reduces variance in individual models, it can inadvertently lead to overfitting. Bagging classifiers aggregate outputs from high-variance base models, and when used as a meta-learner, the bagging process leverages outputs from already strong individual classifiers such as SVM, XGBoost, and LSTM. This additional layer of aggregation may amplify the model's capacity to memorize the training data, particularly when the meta-learner is exposed to intricate patterns that are not generalizable to unseen data. This can result in high accuracy on the training set but poor generalization to new data. The Bagging classifier can achieve an impressive accuracy, such as 99.77\%, but this performance might not hold in real-world scenarios due to its reduced ability to generalize. When the model encounters slight variations in the testing dataset, its overfitting nature can cause the model to fail in maintaining consistent accuracy, leading to unreliable predictions. Bagging classifiers also do not inherently introduce the same level of regularization that Random Forest does. Random Forest uses feature-level randomness, selecting a subset of features for splitting at each node, which helps reduce overfitting by preventing any single feature from dominating the splits. Bagging classifiers, on the other hand, utilize all available features for training, which increases the likelihood of the model fitting noise in the training data, especially in high-dimensional datasets. Moreover, Bagging classifiers can be unstable and sensitive to minor changes in input data or individual base model outputs. This instability can further reduce the reliability of the model in practical applications, where consistency in predictions is crucial. In contrast, Random Forest, despite having slightly lower accuracy than the Bagging classifier, is better suited as a meta-learner. Random Forest introduces feature-level randomness, which prevents overfitting and enables the model to generalize well to unseen data. The bias-variance tradeoff is better balanced in Random Forest, which allows it to perform consistently across different datasets. Another significant advantage of using Random Forest as a meta-learner is its ability to maintain stability when retrained with new data inputs. For example, when retraining with user inputs, the accuracy fluctuations of the Random Forest meta-learner are minimal, indicating its robustness and ensuring stable performance over time. Additionally, Random Forest classifiers are computationally more efficient than Bagging classifiers, making them a more practical choice for real-time systems, such as those in web applications.
+
+
+\pagebreak
+
+\subsubsection{Ensemble Model 6}
+
+\begin{center}
+    \textbf{Classification Report (Blending - Random Forest)} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        \textbf{Anxiety}    & 0.97 & 0.97 & 0.97 & 379 \\ \hline
+        \textbf{Bipolar}    & 0.96 & 0.91 & 0.94 & 384 \\ \hline
+        \textbf{Depression} & 0.93 & 0.96 & 0.94 & 373 \\ \hline
+        \textbf{Normal}     & 0.99 & 1.00 & 0.99 & 2183 \\ \hline
+        \textbf{PTSD}       & 0.97 & 0.97 & 0.97 & 394 \\ \hline
+        \textbf{Accuracy}   & \multicolumn{4}{c|}{\textbf{97.82\%}} \\ \hline
+        \textbf{Macro avg}  & 0.96 & 0.96 & 0.96 & 3713 \\ \hline
+        \textbf{Weighted avg} & 0.98 & 0.98 & 0.98 & 3713 \\ \hline
+    \end{tabular}
+\end{center}
+
+
+\begin{center}
+    \textbf{ROC AUC Scores (Blending - Random Forest)} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Class} & \textbf{ROC AUC} \\ \hline
+        Anxiety & 1.00 \\ \hline
+        Bipolar & 1.00 \\ \hline
+        Depression & 1.00 \\ \hline
+        Normal & 1.00 \\ \hline
+        PTSD & 1.00 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/BLD CM.png}  
+    \caption{Confusion Matrix for Ensemble Model 6}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/BLD ROC.png}  
+    \caption{ROC AUC for Ensemble Model 6}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/BLD RESULT.png}  
+    \caption{Comparison of results for Blending Ensemble Model 6}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\noindent
+The classification results for the Blending ensemble model using Random Forest as the meta-learner indicate a highly accurate performance with an overall accuracy of 97.82\%. The classification report shows precision, recall, and F1-scores close to perfect for the \textit{Normal} class, with all other classes also demonstrating strong performance. For example, \textit{Anxiety} has a precision and recall of 0.97, and \textit{Bipolar} has a precision of 0.96 and a recall of 0.91, which are solid metrics for the given dataset. This indicates that the model is performing well in distinguishing between mental health classes. The confusion matrix further reinforces this, showing that the majority of instances were correctly classified, with only a few misclassifications occurring between similar classes like \textit{Anxiety} and \textit{Bipolar} or \textit{Depression} and \textit{PTSD}. The low number of misclassifications is a sign of the model’s robustness in identifying the correct mental health class for each instance. The ROC AUC scores for all classes being 1.00 show the perfect trade-off between sensitivity and specificity. A score of 1.00 indicates that the model is capable of distinguishing between the positive and negative classes without any compromise in performance. This is an ideal scenario, demonstrating that the blending ensemble model, with Random Forest as the meta-learner, provides exceptional predictive power.
+
+\vspace{1em}
+
+\noindent
+However, despite these impressive results, stacking ensemble using Random Forest as the meta-learner is often preferred over this Blending model. The main reason for this is that stacking tends to be more effective in generalizing to unseen data because it leverages multiple models for training the meta-learner, which reduces the risk of overfitting. In contrast, Blending may result in overfitting as it typically uses a simpler approach of directly training the meta-learner on the predictions from base models without incorporating a cross-validation step. While the Blending model shows slightly better accuracy in this instance, stacking typically results in a more robust model with better generalization, especially when deployed on real-world, unseen data. Thus, while the Blending model with Random Forest as the meta-learner delivers excellent accuracy and performance, stacking ensemble methods remain the preferred choice for their ability to handle overfitting better and for the stronger generalization capabilities that they provide.
+
+\pagebreak
+
+\subsubsection{Ensemble Model 7}
+
+\begin{center}
+    \textbf{Classification Report (Weighted Voting)} \\[0.5em]
+    \begin{tabular}{|c|c|c|c|c|}
+        \hline
+        & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\ \hline
+        \textbf{Anxiety}    & 0.95 & 0.92 & 0.93 & 1999 \\ \hline
+        \textbf{Bipolar}    & 0.94 & 0.75 & 0.84 & 1941 \\ \hline
+        \textbf{Depression} & 0.92 & 0.94 & 0.93 & 1959 \\ \hline
+        \textbf{Normal}     & 0.95 & 1.00 & 0.97 & 10679 \\ \hline
+        \textbf{PTSD}       & 0.98 & 0.91 & 0.94 & 1987 \\ \hline
+        \textbf{Accuracy}   & \multicolumn{4}{c|}{\textbf{94.93\%}} \\ \hline
+        \textbf{Macro avg}  & 0.95 & 0.91 & 0.92 & 18565 \\ \hline
+        \textbf{Weighted avg} & 0.95 & 0.95 & 0.95 & 18565 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC AUC Scores (Weighted Voting)} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Class} & \textbf{ROC AUC Score} \\ \hline
+        Anxiety & 1.00 \\ \hline
+        Bipolar & 0.99 \\ \hline
+        Depression & 1.00 \\ \hline
+        Normal & 1.00 \\ \hline
+        PTSD & 1.00 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{center}
+    \textbf{ROC AUC Scores (Blending - Random Forest)} \\[0.5em]
+    \begin{tabular}{|c|c|}
+        \hline
+        \textbf{Class} & \textbf{ROC AUC} \\ \hline
+        Anxiety & 1.00 \\ \hline
+        Bipolar & 1.00 \\ \hline
+        Depression & 1.00 \\ \hline
+        Normal & 1.00 \\ \hline
+        PTSD & 1.00 \\ \hline
+    \end{tabular}
+\end{center}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/WV CM.png}  
+    \caption{Confusion Matrix for Ensemble Model 7}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.9\textwidth]{Images/WV ROC.png}  
+    \caption{ROC AUC for Ensemble Model 7}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=0.95\textwidth]{Images/WV RESULT.png}  
+    \caption{Comparison of results for Blending Ensemble Model 7}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
+
+\noindent
+The classification results for the Weighted Voting ensemble model show a strong overall accuracy of 94.93\%. The classification report demonstrates robust performance for most of the classes. For instance, the \textit{Normal} class shows perfect recall (1.00) and good precision (0.95), which is ideal for real-world applications. The \textit{Anxiety} class has a precision of 0.95 and recall of 0.92, while the \textit{Bipolar} class has lower recall (0.75), suggesting that this class is more challenging for the model to predict accurately. The other classes, such as \textit{Depression} and \textit{PTSD}, also show good precision and recall values, which further indicates the model's solid performance. The confusion matrix reveals that the majority of instances are correctly classified. A small number of misclassifications occur between the similar classes, especially in the \textit{Bipolar} and \textit{PTSD} categories. For instance, many \textit{Bipolar} instances were misclassified as \textit{Anxiety}, and a small number of \textit{Depression} instances were misclassified as \textit{PTSD}. These misclassifications are relatively small in number compared to the overall dataset, which confirms the model’s robustness. The ROC AUC scores are also impressive, with \textit{Anxiety}, \textit{Depression}, \textit{Normal}, and \textit{PTSD} each receiving a perfect score of 1.00, and \textit{Bipolar} achieving a score of 0.99. These scores reflect the model's strong ability to differentiate between the classes, confirming that the Weighted Voting model is capable of handling the dataset effectively.
+
+\vspace{1em}
+
+\noindent
+While the Weighted Voting ensemble model shows a respectable accuracy of 94.93\% and performs well across all classes, it is not preferred over other models like the Stacking ensemble with Random Forest as the meta-learner. The primary reason for this is that the Weighted Voting model does not fully take advantage of the strength of individual base models in the same way as the Stacking ensemble does. In Weighted Voting, the predictions of base models are combined based on their weighted contribution, but this method does not allow for the optimal learning of inter-model relationships that Stacking does. In the Stacking model, the Random Forest meta-learner is specifically designed to handle interactions between different base models, learning how to combine their strengths in a way that minimizes overfitting while maintaining high accuracy. In contrast, Weighted Voting simply assigns a weight to each model based on its performance, without a deeper mechanism to adjust for overfitting or to learn from the diversity of base models. This lack of fine-tuning in model interaction limits its ability to generalize as effectively as Stacking. Furthermore, the Weighted Voting model's performance may suffer when dealing with more complex relationships between features, as it relies on the simplicity of averaging the weighted predictions. While it is computationally efficient, it does not provide the robustness that Stacking offers through a more sophisticated meta-learning approach. As a result, despite the relatively high accuracy, the Weighted Voting ensemble model is considered less optimal for the given task when compared to more powerful models like Stacking.
+
+\vspace{1em}
+
+\noindent
+Below is a comparison of all the ensemble models for reference
+
+\begin{figure}[h!]  
+    \centering
+    \includegraphics[width=1.0\textwidth]{Images/EM COMPARE.png}  
+    \caption{Comparison of all the Ensemble Models}
+    \label{dfdl1244883}  % Label for referencing the figure
+\end{figure}
 
 
 
 \pagebreak
+
+
+
+
 
 % ------------------------ Result and Analysis Ends -------------------------

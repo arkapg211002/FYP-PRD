@@ -162,6 +162,108 @@ df.to_csv(f'{label}_dataset.csv', index=False)
         \label{Data Collection and Preprocessing}  % Label for referencing the figure
     \end{figure}
 
+% ------------ OTHER VECTORIZATIONS
+
+\subsubsection{Vectorization Technqiues}
+
+% Bag of Words
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Bag of Words]
+\begin{lstlisting}[language=Python]
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Initialize the CountVectorizer and fit/transform the cleaned text
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(dataset['cleaned_text'])
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+Bag of Words (BoW) converts text into a matrix of word counts. Each unique word in the corpus becomes a feature, and the value is the word's frequency in the document, ignoring grammar and word order.
+
+% TF-IDF
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=TF-IDF]
+\begin{lstlisting}[language=Python]
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Initialize the TfidfVectorizer and fit/transform the cleaned text
+TFIDFvectorizer = TfidfVectorizer()
+X = TFIDFvectorizer.fit_transform(dataset['cleaned_text'])
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+Term Frequency-Inverse Document Frequency (TF-IDF) weighs words by their importance in a corpus. Common words receive lower weights, while rare words are assigned higher values, capturing their significance in the document.
+
+% N-Gram
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=N-Gram]
+\begin{lstlisting}[language=Python]
+from sklearn.feature_extraction.text import CountVectorizer
+
+# Initialize the CountVectorizer with n-grams (e.g., bi-grams and tri-grams)
+vectorizer = CountVectorizer(ngram_range=(1, 3))
+X = vectorizer.fit_transform(dataset['cleaned_text'])
+\end{lstlisting}
+\end{tcolorbox}
+    
+\noindent
+N-Grams capture contiguous sequences of words to preserve some context. For example, bigrams (2-grams) capture pairs of words like "machine learning," and trigrams (3-grams) capture sequences like "natural language processing."
+
+% LIWC
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=LIWC (Empath)]
+\begin{lstlisting}[language=Python]
+from empath import Empath
+
+# Initialize Empath
+lexicon = Empath()
+
+# Function to get Empath features
+def get_empath_features(text):
+    analysis = lexicon.analyze(text, normalize=True)  # Normalize for proportions
+    return analysis
+
+# Generate Empath features for each text
+empath_features = dataset['cleaned_text'].apply(get_empath_features)
+
+# Convert Empath features to a DataFrame
+X = pd.DataFrame(empath_features.tolist())
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+LIWC (Linguistic Inquiry and Word Count) analyzes text by categorizing words into meaningful psychological or social dimensions. Empath is a Python library that replicates this functionality with customizable lexicons. Empath is a Python-based natural language processing tool inspired by LIWC (Linguistic Inquiry and Word Count), designed to analyze text and categorize words into psychologically meaningful dimensions such as emotions, cognitive processes, and social themes. This tool is particularly valuable for extracting semantic features that capture the psychological and emotional aspects of textual data, making it ideal for applications in sentiment analysis, mental health studies, and psycholinguistics. By matching words in the text to predefined categories, Empath assigns a proportional representation to each category, indicating the relative frequency of words that belong to it. In the provided code, an \texttt{Empath} object is initialized, which serves as the base for analyzing text against the predefined lexicons. A function named \texttt{get\_empath\_features} is defined to process individual texts from the dataset. This function leverages the \texttt{analyze} method of the \texttt{Empath} object to compute the distribution of words across various categories. The \texttt{normalize=True} parameter ensures that the output represents proportions rather than raw counts, making the results more interpretable and comparable across texts of varying lengths. The function is applied to each piece of cleaned text in the dataset, producing a structured output where each text is represented as a dictionary. Each key in this dictionary corresponds to an Empath category, and the associated value indicates the proportion of words from the text that fall into that category. The list of dictionaries generated through this process is then converted into a DataFrame, where each column represents a category and each row corresponds to a document in the dataset. This transformation allows the extracted features to be seamlessly integrated into machine learning pipelines, where they can serve as predictors for tasks like sentiment analysis, mental health classification.
+
+% Word2Vec
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Word2Vec]
+\begin{lstlisting}[language=Python]
+from nltk.tokenize import word_tokenize
+import gensim
+
+# Tokenize the text data into words
+def tokenize_text(text):
+    return word_tokenize(text.lower())
+
+dataset['tokens'] = dataset['cleaned_text'].apply(tokenize_text)
+
+# Train a Word2Vec model using the tokenized data
+word2vec_model = gensim.models.Word2Vec(sentences=dataset['tokens'], vector_size=100, window=5, min_count=1, workers=4)
+
+# Function to average Word2Vec vectors for each document
+def get_document_vector(tokens):
+    valid_tokens = [word for word in tokens if word in word2vec_model.wv]
+    if len(valid_tokens) == 0:
+        return [0] * word2vec_model.vector_size  # Return zero vector for empty documents
+    vectors = [word2vec_model.wv[word] for word in valid_tokens]
+    return list(np.mean(vectors, axis=0))
+
+# Convert the text data into document vectors
+X = dataset['tokens'].apply(get_document_vector)
+\end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+Word2Vec creates dense vector representations of words by training a neural network to predict words in context. These embeddings capture semantic meaning, and document vectors are computed by averaging word embeddings. The Python code implements a Word2Vec-based approach to transform text data into numerical vectors. First, the \texttt{tokenize\_text} function is defined to tokenize each text in the dataset into lowercase words, creating a new column named \texttt{tokens}. Using these tokenized sentences, a Word2Vec model is trained with parameters such as a vector size of 100, a context window of 5, and a minimum word frequency of 1. The \texttt{get\_document\_vector} function computes a document-level vector by averaging the Word2Vec embeddings of valid tokens in each text, ensuring that empty documents return a zero vector. Finally, the document vectors are calculated and stored in \texttt{X}, enabling their use as input features for downstream machine learning tasks.
+
+
 \subsubsection{Logistic Regression Model for Classification}
 
 \begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Logistic Regression for Mental Health Classification]
@@ -970,11 +1072,11 @@ print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 This code implements a Naive Bayes classifier using the MultinomialNB algorithm to classify mental health issues from text data, with hyperparameter tuning via RandomizedSearchCV. The dataset is first loaded, ensuring the required columns, \texttt{cleaned\_text} (features) and \texttt{mental\_health\_issue} (target), exist. Rows with missing values in the \texttt{cleaned\_text} column are removed to maintain data quality. The text is vectorized using \texttt{CountVectorizer}, converting it into a bag-of-words representation. The features (\(X\)) and target (\(y\)) are then split into training (80\%) and test (20\%) sets to facilitate proper evaluation. The Naive Bayes model is initialized, and a parameter distribution for \texttt{alpha} is defined using a uniform distribution, sampling values between 0.001 and 5.0. \texttt{RandomizedSearchCV} is utilized to explore different values for \texttt{alpha} over 10 iterations, using 5-fold cross-validation and accuracy as the scoring metric. The best hyperparameters are identified and used to configure the final Naive Bayes model. The model is then tested on the unseen data (test set).
 
 % --------- ENSEMBLE LEARNING ----------
-\subsubsection{Ensemble Model}
+\subsubsection{Ensemble Model 1 (Stacking with Meta-Learner : Logistic Regression)}
 \noindent
-\textbf{Using Logistic Regression (meta learner) and XGBoost}
+\textbf{Base Model : Logistic Regression, XGBoost. }
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Model Loading and Preprocessing]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Ensemble Model 1 : Loading and Preprocessing]
     \begin{lstlisting}[language=Python]
 import pickle
 from sklearn.ensemble import StackingClassifier
@@ -1001,7 +1103,7 @@ with open('tfidf_vectorizer.pkl', 'rb') as file:
 \noindent
 This Python code is centered around preparing a machine learning workflow by loading pre-trained models and their corresponding preprocessing tools. It begins by importing essential libraries for model evaluation and stacking. The \texttt{pickle} library is specifically used to load serialized Python objects, enabling the restoration of previously trained models and utilities saved as \texttt{.pkl} files. The first part of the code loads a Logistic Regression model along with its associated vectorizer. The Logistic Regression model is deserialized from the \texttt{LRmodel.pkl} file, which represents a trained model capable of predicting outcomes based on vectorized text data. The corresponding vectorizer, stored in \texttt{LRvectorizer.pkl}, is also loaded. This vectorizer, likely a \texttt{CountVectorizer}, converts raw text into numerical feature vectors, which serve as the input for the Logistic Regression model. By loading these components, the workflow ensures consistency with the preprocessing and modeling steps used during training. In the next section, the code loads an XGBoost model alongside its associated tools. The XGBoost model is deserialized from \texttt{xgb\_model.pkl} and represents another trained model designed to classify text data. To facilitate this, the code also loads a label encoder from \texttt{label\_encoder.pkl}. The label encoder is responsible for mapping textual class labels (e.g., "depression" or "normal") to numerical values required by machine learning models. Furthermore, the \texttt{tfidf\_vectorizer.pkl} is loaded to preprocess text data using the Term Frequency-Inverse Document Frequency (TF-IDF) approach, which captures the importance of words in a document relative to a corpus. This ensures that the input text is transformed in a manner consistent with the original training setup of the XGBoost model. The design of this code emphasizes efficiency and consistency by leveraging pre-trained components. Instead of retraining models, it restores them from their serialized forms, enabling immediate use for predictions or integration into ensemble learning setups. This approach also ensures that text preprocessing remains identical to the training phase, avoiding discrepancies in input data handling. By combining these tools, the foundation is laid for complex tasks such as making predictions or building advanced models like stacked classifiers.
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Data Preparation]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Ensemble Model 1 : Data Preparation]
 \begin{lstlisting}[language=Python]
 # Load the test dataset
 data = pd.read_csv('preprocessed_mental_health.csv')
@@ -1029,7 +1131,7 @@ X_test_xgb = tfidf_vectorizer.transform(X_test)  # XGBoost vectorizer
 \noindent
 This code snippet focuses on preparing the test dataset for evaluation with pre-trained machine learning models, specifically Logistic Regression and XGBoost. First, the test dataset is loaded from a CSV file named \texttt{preprocessed\_mental\_health.csv} using \texttt{pd.read\_csv}. The dataset is expected to have been preprocessed earlier, containing features and corresponding labels. The code then checks for the existence of a critical column named \texttt{cleaned\_text}. If this column is missing, a \texttt{ValueError} is raised, ensuring that the dataset meets the required format for subsequent steps. Next, the code removes rows with missing values in the \texttt{cleaned\_text} column using \texttt{data.dropna}. This step ensures the dataset is clean and free of incomplete rows that could potentially cause errors during text transformation or model evaluation. After this cleaning process, the dataset is split into features (\texttt{X\_test}) and target labels (\texttt{y\_test}). The features contain the preprocessed text, while the target labels represent the mental health issues corresponding to each text entry. The target labels in \texttt{y\_test} are then encoded into numerical format using a preloaded \texttt{label\_encoder}. This encoding is crucial because machine learning models require numerical representations of categorical labels for classification tasks. By transforming the labels to integers, the encoded labels are consistent with the classes used during the model's training phase. Finally, the text data in \texttt{X\_test} is vectorized using two pre-trained vectorizers. The \texttt{lr\_vectorizer}, likely a \texttt{CountVectorizer} or similar, is applied to produce feature vectors suitable for the Logistic Regression model. Simultaneously, the \texttt{tfidf\_vectorizer} is applied to transform the same text data into feature vectors optimized for the XGBoost model. These transformations ensure that the test data aligns with the feature representations learned by the respective models during training. This setup allows for seamless evaluation of the Logistic Regression and XGBoost models on the same dataset, maintaining consistency with their training configurations.
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Combine Base Model Predictions]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Ensemble Model 1 : Combine Base Model Predictions]
 \begin{lstlisting}[language=Python]
 import numpy as np
 
@@ -1045,7 +1147,7 @@ stacked_features = np.hstack((lr_predictions_proba, xgb_predictions_proba))
 \noindent
 This Python code demonstrates a fundamental step in stacking ensemble learning by combining the prediction probabilities of base models into a single feature set. The process begins with obtaining predictions from two pre-trained models: a Logistic Regression model (\texttt{lr\_model}) and an XGBoost model (\texttt{xgb\_model}). These models generate class probability distributions for the test dataset, which are then used as input features for a meta-learner in an ensemble framework. First, the code uses the \texttt{predict\_proba} method of each model to calculate the probabilities associated with each class for every test instance. For the Logistic Regression model, the feature set (\texttt{X\_test\_lr}) is passed to \texttt{lr\_model.predict\_proba}, producing a 2D array (\texttt{lr\_predictions\_proba}) where each row contains the class probabilities for a corresponding instance. Similarly, the XGBoost model processes its input features (\texttt{X\_test\_xgb}) to generate a comparable 2D array (\texttt{xgb\_predictions\_proba}) of class probabilities. Next, the code combines these probability arrays to form a new feature set, referred to as \texttt{stacked\_features}. This is accomplished using the \texttt{np.hstack} function from the NumPy library, which horizontally stacks the arrays column-wise. The resulting \texttt{stacked\_features} array contains concatenated probability distributions from both models for each instance. For example, if there are three classes and 100 instances, the combined feature set will have 100 rows and six columns (three from each model). This stacked feature set serves as input to a meta-learner, enabling it to make final predictions by leveraging the strengths of both base models. By integrating predictions in this manner, the stacking approach aims to improve classification performance by reducing errors associated with individual models. The meta-learner effectively learns how to optimally combine these predictions to produce more accurate outcomes.
     
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Train Meta-Learner]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Ensemble Model 1 : Train Meta-Learner]
 \begin{lstlisting}[language=Python]
 # Train meta-learner using combined features (optional step if not pre-trained)
 X_train_meta, y_train_meta = stacked_features, y_test  # Example using test data as meta-training data
@@ -1063,7 +1165,7 @@ with open('meta_learner.pkl', 'wb') as file:
 This Python code focuses on training a meta-learner in the context of stacking ensemble learning. A meta-learner is a secondary machine learning model trained on the outputs of base models, with the goal of combining their predictions to achieve higher accuracy and robustness. The first step involves defining the training data for the meta-learner. The variable \texttt{X\_train\_meta} is set to the combined feature set (\texttt{stacked\_features}), which contains the concatenated prediction probabilities from base models like Logistic Regression and XGBoost. These features represent the likelihood of each class for every instance, as estimated by the base models. The variable \texttt{y\_train\_meta} holds the true labels (\texttt{y\_test}), which are used as the target variable for training the meta-learner. The code then initializes a Logistic Regression model as the meta-learner. The parameter \texttt{max\_iter=5000} ensures that the optimization process has sufficient iterations to converge, particularly for complex datasets or large feature sets. The \texttt{fit} method is called to train the meta-learner using the stacked features and corresponding labels. During this training process, the meta-learner learns how to optimally combine the prediction probabilities from the base models to produce more accurate final predictions. After training, the code saves the meta-learner to a file named \texttt{meta\_learner.pkl} using the \texttt{pickle.dump} function. This step serializes the trained model, enabling its reuse for future predictions without needing to retrain it. By saving the meta-learner, the workflow becomes more efficient, as the combined expertise of the base models and the meta-learner can be leveraged in subsequent tasks. This approach exemplifies the flexibility and power of stacking ensemble learning, where a meta-learner synthesizes the strengths of multiple base models to enhance predictive performance. The ability to save the meta-learner ensures that this improved model can be deployed in practical applications with minimal computational overhead.
     
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Ensemble Model 1 : Evaluate Meta-Learner and Ensemble Model]
 \begin{lstlisting}[language=Python]
 from sklearn.metrics import confusion_matrix
 
@@ -1094,10 +1196,11 @@ This Python code evaluates the performance of a stacking ensemble model, specifi
 In ensemble learning, combining different models like Logistic Regression and XGBoost often leads to improved results due to their complementary strengths. Logistic Regression, being a linear model, excels in problems where the relationship between features is linear. It is simple, interpretable, and computationally efficient, making it effective for text-based classification tasks when the relationship between the features (such as word counts or TF-IDF scores) and the target variable is linear. However, Logistic Regression has some limitations: it struggles with capturing complex non-linear relationships and can perform poorly when the data is highly imbalanced or when there are interactions between features that the model cannot capture. On the other hand, XGBoost (Extreme Gradient Boosting) is a powerful tree-based model that can capture complex, non-linear relationships and interactions between features, making it particularly effective for handling large, noisy, and high-dimensional datasets like text. It builds an ensemble of decision trees and iteratively improves the model by minimizing errors. However, XGBoost also has its drawbacks. It requires careful tuning of hyperparameters (e.g., learning rate, number of trees, and tree depth) and can be computationally expensive, especially for large datasets. Additionally, while it can model non-linear relationships well, it lacks the interpretability of simpler models like Logistic Regression. By combining Logistic Regression and XGBoost in an ensemble learning setup, the two models can complement each other. Logistic Regression can provide a robust baseline when the relationships between features are linear, while XGBoost can enhance the model's ability to capture more complex patterns. This hybrid approach leverages the strengths of both models—Logistic Regression's simplicity and speed, alongside XGBoost's power in modeling complex interactions.
 
 \pagebreak
+\subsubsection{Ensemble Model 2 (Stacking and Boosting with Meta-Learner : XGBoost)}
 \noindent
-\textbf{Using Logistic Regression, Naive Bayes, Support Vector Machine, LSTM and XGBoost (meta learner)}
+\textbf{Base Models : Logistic Regression, Naive Bayes, SVM, LSTM, XGBoost.}
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 2]
     \begin{lstlisting}[language=Python]
 import pickle
 import numpy as np
@@ -1142,7 +1245,7 @@ if 'cleaned_text' not in data.columns:
 \end{lstlisting}
 \end{tcolorbox}
  
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 2]
     \begin{lstlisting}[language=Python]
 # Remove rows with missing values in 'cleaned_text'
 data.dropna(subset=['cleaned_text'], inplace=True)
@@ -1182,7 +1285,7 @@ stacked_features = np.hstack((
 \end{lstlisting}
 \end{tcolorbox}
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 2]
     \begin{lstlisting}[language=Python]
 # Train the meta-learner (XGBoost as the meta-learner)
 meta_learner_xgb = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
@@ -1214,11 +1317,11 @@ This script is designed to load several pre-trained machine learning models, app
 After transforming the data, the script proceeds to generate predictions from each model. The predictions for each model are given in the form of probabilities (instead of class labels), using methods like \texttt{predict\_proba()}. These probabilities represent the model’s confidence in each class for a given input. For the LSTM model, the prediction probabilities are generated using \texttt{model.predict()}, which outputs the probability distribution across possible classes. With these prediction probabilities in hand, the script constructs a feature matrix for the meta-learner, which is an ensemble learning method that combines the predictions of the base models. This meta-learner is an XGBoost classifier, which is a powerful machine learning algorithm known for its efficiency and predictive accuracy. The probabilities predicted by each base model are stacked together using \texttt{np.hstack()}, creating a combined feature vector for each sample in the dataset. These stacked features are then used to train the XGBoost meta-learner model. The trained meta-learner, now stored in \texttt{meta\_learner\_xgb}, is used to make final predictions. These predictions represent the ensemble decision, which ideally benefits from the strengths of all the base models. The script then evaluates the performance of the meta-learner using accuracy, classification report, and confusion matrix. Accuracy gives an overall percentage of correctly classified instances, while the classification report provides detailed metrics like precision, recall, and F1-score for each class. The confusion matrix helps visualize the performance of the classifier, showing how many samples were correctly or incorrectly classified for each class. Finally, the trained meta-learner is saved to disk using \texttt{pickle.dump()} for future use, so it can be reused to make predictions on new data without retraining. This entire process ensures that the ensemble model, which combines the strengths of different classifiers, is capable of making robust predictions on the mental health issue dataset.
 
 \pagebreak
-
+\subsubsection{Ensemble Model 3 (Stacking with Meta-Learner : Logistic Regression)}
 \noindent
-\textbf{Using Logistic Regression (meta learner), Naive Bayes, Support Vector Machine, LSTM and XGBoost}
+\textbf{Base Model : Logistic Regression, Naive Bayes, SVM, LSTM, XGBoost}
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 3]
     \begin{lstlisting}[language=Python]
 import pickle
 import numpy as np
@@ -1299,7 +1402,7 @@ lstm_predictions_proba = lstm_model.predict(X_test_lstm)  # LSTM probabilities
 \end{lstlisting}
 \end{tcolorbox}
 
-\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model]
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 3]
     \begin{lstlisting}[language=Python]
 # Stack the predictions of all models to create the feature matrix for the meta-learner
 stacked_features = np.hstack((
@@ -1345,6 +1448,434 @@ print("Confusion Matrix (Logistic Regression):\n", confusion_matrix(y_test, fina
 
 \noindent
 The code begins by importing the necessary libraries, which include pickle for loading the saved models and vectorizers, numpy and pandas for data manipulation, tensorflow for the LSTM model, and various machine learning tools from sklearn like LogisticRegression and StratifiedKFold for cross-validation. The first part of the code loads the pre-trained models and their corresponding preprocessing components from disk using pickle for models such as logistic regression, support vector machine, Naive Bayes, and XGBoost, and tensorflow for the LSTM model. The models include their respective vectorizers, tokenizers, and the label encoder, which were previously trained and saved. These models are designed to predict mental health issues based on text data, and each model uses different techniques to process the input data. After loading the models, the code proceeds to load the test dataset, which is stored in a CSV file containing preprocessed mental health-related text in the column \texttt{cleaned\_text}. It ensures that any missing values in the \texttt{cleaned\_text} column are removed before proceeding with the analysis. The target variable, \texttt{mental\_health\_issue}, is then encoded into numerical labels using the label encoder to prepare the data for model prediction. The test text data is then transformed using the appropriate vectorizer for each model. For instance, the logistic regression and SVM models use their respective vectorizers to convert the text into feature matrices, while the LSTM model tokenizes the text into integer sequences and pads the sequences to a fixed length of 100 tokens to ensure uniform input size. Once the text data is processed for each model, the code proceeds to generate prediction probabilities for each base model using methods like \texttt{predict\_proba} for logistic regression, SVM, XGBoost, and Naive Bayes, while the LSTM model uses the \texttt{predict} method to output class probabilities. These probabilities represent the models’ confidence in predicting each possible class for each input. The predictions from each model are then stacked together using numpy to create a combined feature matrix, which serves as input for the meta-learner model. The meta-learner, in this case, is a logistic regression model that combines the strengths of the base models to improve the overall prediction accuracy. Before training the meta-learner, a cross-validation process is set up using StratifiedKFold, which ensures that each fold of the cross-validation maintains the class distribution of the target variable. This step is important to assess the stability and generalization of the meta-learner model across different subsets of the data. Cross-validation is performed using the \texttt{cross\_val\_score} method from sklearn, which calculates the accuracy for each fold and prints the mean cross-validation accuracy score. After evaluating the model through cross-validation, the meta-learner is trained on the full dataset, and the model is saved to disk using pickle for future use. The trained meta-learner is then used to make final predictions by predicting the class labels based on the stacked features. The model's performance is evaluated using \texttt{accuracy\_score}, \texttt{classification\_report}, and \texttt{confusion\_matrix} from sklearn to provide a comprehensive evaluation of the model's performance, including precision, recall, and F1-score for each class, along with a confusion matrix.
+
+
+\subsubsection{Ensemble Model 4 (Stacking with Meta Learner : Random Forest)}
+
+\noindent
+\textbf{Base Model : Logistic Regression, Naive Bayes, SVM, LSTM, XGBoost}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 4]
+    \begin{lstlisting}[language=Python]
+import pickle
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import pad_sequences
+
+# Load models and vectorizers
+with open('LRmodel.pkl', 'rb') as file:
+    lr_model = pickle.load(file)
+with open('LRvectorizer.pkl', 'rb') as file:
+    lr_vectorizer = pickle.load(file)
+with open('SVMmodel.pkl', 'rb') as file:
+    svm_model = pickle.load(file)
+with open('SVMvectorizer.pkl', 'rb') as file:
+    svm_vectorizer = pickle.load(file)
+with open('XGBmodel.pkl', 'rb') as file:
+    xgb_model = pickle.load(file)
+with open('XGBvectorizer.pkl', 'rb') as file:
+    tfidf_vectorizer = pickle.load(file)
+with open('XGBlabel_encoder.pkl', 'rb') as file:
+    label_encoder = pickle.load(file)
+lstm_model = load_model('LSTMmodel.h5')
+with open('LSTMtokenizer.pkl', 'rb') as file:
+    lstm_tokenizer = pickle.load(file)
+with open('NBmodel.pkl', 'rb') as file:
+    nb_model = pickle.load(file)
+with open('NBvectorizer.pkl', 'rb') as file:
+    nb_vectorizer = pickle.load(file)
+
+# Load the test dataset
+data = pd.read_csv('preprocessed_mental_health.csv')
+data.dropna(subset=['cleaned_text'], inplace=True)
+X_test = data['cleaned_text']
+y_test = data['mental_health_issue']
+y_test = label_encoder.transform(y_test)
+
+# Preprocess the text
+X_test_lr = lr_vectorizer.transform(X_test)
+X_test_svm = svm_vectorizer.transform(X_test)
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 4]
+    \begin{lstlisting}[language=Python]
+X_test_nb = nb_vectorizer.transform(X_test)
+X_test_xgb = tfidf_vectorizer.transform(X_test)
+X_test_lstm = lstm_tokenizer.texts_to_sequences(X_test)
+X_test_lstm = pad_sequences(X_test_lstm, maxlen=100, padding='post', truncating='post')
+
+# Get individual model probabilities
+lr_predictions_proba = lr_model.predict_proba(X_test_lr)
+svm_predictions_proba = svm_model.predict_proba(X_test_svm)
+nb_predictions_proba = nb_model.predict_proba(X_test_nb)
+xgb_predictions_proba = xgb_model.predict_proba(X_test_xgb)
+lstm_predictions_proba = lstm_model.predict(X_test_lstm)
+
+# Stack the predictions to create the feature matrix for the meta-learner
+stacked_features = np.hstack((
+    lr_predictions_proba, svm_predictions_proba, nb_predictions_proba, xgb_predictions_proba, lstm_predictions_proba
+))
+
+# Train Random Forest as the meta-learner
+meta_learner_rf = RandomForestClassifier(
+    max_depth=None, min_samples_split=20, min_samples_leaf=1, max_features='sqrt', bootstrap=False, random_state=42           
+)
+meta_learner_rf.fit(stacked_features, y_test)
+
+# Save the trained Random Forest meta-learner
+with open('meta_learner_rf.pkl', 'wb') as file:
+    pickle.dump(meta_learner_rf, file)
+
+# Predict using the Random Forest meta-learner
+final_predictions_rf = meta_learner_rf.predict(stacked_features)
+
+# Evaluate the Random Forest ensemble model
+accuracy_rf = accuracy_score(y_test, final_predictions_rf)
+report_rf = classification_report(y_test, final_predictions_rf, target_names=label_encoder.classes_)
+
+print(f"Random Forest Meta-Learner Accuracy: {accuracy_rf * 100:.2f}%")
+print("Classification Report (Random Forest):\n", report_rf)
+print("Confusion Matrix (Random Forest):\n", confusion_matrix(y_test, final_predictions_rf))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+In this section, we evaluate the performance of the Random Forest meta-learner model in the ensemble. The code loads various pre-trained models and their respective vectorizers, processes the test data, and then stacks the predictions from each model to form a feature matrix. The Random Forest classifier is then trained as a meta-learner using this stacked feature matrix. After training, the model's accuracy is calculated, and the classification report and confusion matrix are displayed to assess its performance. This ensemble approach combines the strengths of individual models, improving the overall classification accuracy for mental health issue prediction.
+
+
+\subsubsection{Ensemble Model 5 (Bagging)}
+
+\noindent
+\textbf{Base Model : Logistic Regression, Naive Bayes, SVM, LSTM, XGBoost}
+
+\noindent
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Bagging Meta-Learner and Ensemble Model 5]
+    \begin{lstlisting}[language=Python]
+import pickle
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.ensemble import BaggingClassifier
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import pad_sequences
+
+# Load models and vectorizers
+with open('LRmodel.pkl', 'rb') as file:
+    lr_model = pickle.load(file)
+with open('LRvectorizer.pkl', 'rb') as file:
+    lr_vectorizer = pickle.load(file)
+with open('SVMmodel.pkl', 'rb') as file:
+    svm_model = pickle.load(file)
+with open('SVMvectorizer.pkl', 'rb') as file:
+    svm_vectorizer = pickle.load(file)
+with open('xgb_model.pkl', 'rb') as file:
+    xgb_model = pickle.load(file)
+with open('tfidf_vectorizer.pkl', 'rb') as file:
+    tfidf_vectorizer = pickle.load(file)
+with open('label_encoder.pkl', 'rb') as file:
+    label_encoder = pickle.load(file)
+lstm_model = load_model('lstm_model.h5')
+with open('LSTM_tokenizer.pkl', 'rb') as file:
+    lstm_tokenizer = pickle.load(file)
+with open('NBmodel.pkl', 'rb') as file:
+    nb_model = pickle.load(file)
+with open('NBvectorizer.pkl', 'rb') as file:
+    nb_vectorizer = pickle.load(file)
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Bagging Meta-Learner and Ensemble Model 5]
+    \begin{lstlisting}[language=Python]
+# Load the test dataset
+data = pd.read_csv('preprocessed_mental_health.csv')
+data.dropna(subset=['cleaned_text'], inplace=True)
+X_test = data['cleaned_text']
+y_test = data['mental_health_issue']
+y_test = label_encoder.transform(y_test)
+
+# Preprocess the text
+X_test_lr = lr_vectorizer.transform(X_test)
+X_test_svm = svm_vectorizer.transform(X_test)
+X_test_nb = nb_vectorizer.transform(X_test)
+X_test_xgb = tfidf_vectorizer.transform(X_test)
+X_test_lstm = lstm_tokenizer.texts_to_sequences(X_test)
+X_test_lstm = pad_sequences(X_test_lstm, maxlen=100, padding='post', truncating='post')
+
+# Get individual model probabilities
+lr_predictions_proba = lr_model.predict_proba(X_test_lr)
+svm_predictions_proba = svm_model.predict_proba(X_test_svm)
+nb_predictions_proba = nb_model.predict_proba(X_test_nb)
+xgb_predictions_proba = xgb_model.predict_proba(X_test_xgb)
+lstm_predictions_proba = lstm_model.predict(X_test_lstm)
+
+# Stack the predictions to create the feature matrix for the meta-learner
+stacked_features = np.hstack((
+    lr_predictions_proba, svm_predictions_proba,  nb_predictions_proba, xgb_predictions_proba,  lstm_predictions_proba
+))
+
+# Train BaggingClassifier as the ensemble model
+meta_learner_bagging = BaggingClassifier(
+    n_estimators=50,            # Number of base models
+    max_samples=0.8,            # Fraction of the dataset for each model
+    max_features=0.8,           # Fraction of features for each model
+    bootstrap=True,             # Whether to bootstrap samples
+    random_state=42             # For reproducibility
+)
+meta_learner_bagging.fit(stacked_features, y_test)
+
+# Save the trained Bagging meta-learner
+with open('meta_learner_bagging.pkl', 'wb') as file:
+    pickle.dump(meta_learner_bagging, file)
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Evaluate Meta-Learner and Ensemble Model 5]
+    \begin{lstlisting}[language=Python]
+# Predict using the Bagging meta-learner
+final_predictions_bagging = meta_learner_bagging.predict(stacked_features)
+
+# Evaluate the Bagging ensemble model
+accuracy_bagging = accuracy_score(y_test, final_predictions_bagging)
+report_bagging = classification_report(y_test, final_predictions_bagging, target_names=label_encoder.classes_)
+
+print(f"Bagging Meta-Learner Accuracy: {accuracy_bagging * 100:.2f}%")
+print("Classification Report (Bagging):\n", report_bagging)
+print("Confusion Matrix (Bagging):\n", confusion_matrix(y_test, final_predictions_bagging))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+In this section, the performance of the Bagging ensemble model is evaluated. The process begins by loading pre-trained models and their vectorizers, along with the test dataset. After preprocessing the text data for each model, the individual model probabilities are obtained. These predictions are then stacked to form a feature matrix that is fed into the BaggingClassifier, which is trained as a meta-learner. The accuracy, classification report, and confusion matrix are computed to assess the performance of the Bagging meta-learner on the test data.
+
+
+\subsubsection{Ensemble Model 6 (Blending with Meta-Learner : Random Forest)}
+
+\textbf{Base Model : Logistic Regression, Naive Bayes, SVM, LSTM, XGBoost}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Blending with Random Forest as Meta-Learner]
+    \begin{lstlisting}[language=Python]
+import pickle
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import pad_sequences
+from tensorflow.keras.utils import to_categorical
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Blending with Random Forest as Meta-Learner]
+    \begin{lstlisting}[language=Python]
+# Load models and vectorizers
+with open('LRmodel.pkl', 'rb') as file:
+    lr_model = pickle.load(file)
+with open('LRvectorizer.pkl', 'rb') as file:
+    lr_vectorizer = pickle.load(file)
+with open('SVMmodel.pkl', 'rb') as file:
+    svm_model = pickle.load(file)
+with open('SVMvectorizer.pkl', 'rb') as file:
+    svm_vectorizer = pickle.load(file)
+with open('xgb_model.pkl', 'rb') as file:
+    xgb_model = pickle.load(file)
+with open('tfidf_vectorizer.pkl', 'rb') as file:
+    tfidf_vectorizer = pickle.load(file)
+with open('label_encoder.pkl', 'rb') as file:
+    label_encoder = pickle.load(file)
+lstm_model = load_model('lstm_model.h5')
+with open('LSTM_tokenizer.pkl', 'rb') as file:
+    lstm_tokenizer = pickle.load(file)
+with open('NBmodel.pkl', 'rb') as file:
+    nb_model = pickle.load(file)
+with open('NBvectorizer.pkl', 'rb') as file:
+    nb_vectorizer = pickle.load(file)
+
+# Load the test dataset
+data = pd.read_csv('preprocessed_mental_health.csv')
+data.dropna(subset=['cleaned_text'], inplace=True)
+X = data['cleaned_text']
+y = data['mental_health_issue']
+y = label_encoder.transform(y)
+
+# Split data into training and holdout sets (for blending)
+X_train, X_holdout, y_train, y_holdout = train_test_split(X, y, test_size=0.2, random_state=42)
+# One-hot encode the labels
+y_train_one_hot = to_categorical(y_train, num_classes=len(label_encoder.classes_))
+y_holdout_one_hot = to_categorical(y_holdout, num_classes=len(label_encoder.classes_))
+
+# Preprocess the text for the training set
+X_train_lr = lr_vectorizer.transform(X_train)
+X_train_svm = svm_vectorizer.transform(X_train)
+X_train_nb = nb_vectorizer.transform(X_train)
+X_train_xgb = tfidf_vectorizer.transform(X_train)
+X_train_lstm = lstm_tokenizer.texts_to_sequences(X_train)
+X_train_lstm = pad_sequences(X_train_lstm, maxlen=100, padding='post', truncating='post')
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Blending with Random Forest as Meta-Learner]
+    \begin{lstlisting}[language=Python]
+# Train base models
+lr_model.fit(X_train_lr, y_train)
+svm_model.fit(X_train_svm, y_train)
+nb_model.fit(X_train_nb, y_train)
+xgb_model.fit(X_train_xgb, y_train)
+
+# Recompile the LSTM model to reset the optimizer
+lstm_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Train the LSTM model with one-hot encoded labels
+lstm_model.fit(X_train_lstm, y_train_one_hot, epochs=3, batch_size=32)  # Adjust epochs and batch size as needed
+
+# Preprocess the text for the holdout set
+X_holdout_lr = lr_vectorizer.transform(X_holdout)
+X_holdout_svm = svm_vectorizer.transform(X_holdout)
+X_holdout_nb = nb_vectorizer.transform(X_holdout)
+X_holdout_xgb = tfidf_vectorizer.transform(X_holdout)
+X_holdout_lstm = lstm_tokenizer.texts_to_sequences(X_holdout)
+X_holdout_lstm = pad_sequences(X_holdout_lstm, maxlen=100, padding='post', truncating='post')
+
+# Get predictions from base models on the holdout set
+lr_predictions_proba = lr_model.predict_proba(X_holdout_lr)
+svm_predictions_proba = svm_model.predict_proba(X_holdout_svm)
+nb_predictions_proba = nb_model.predict_proba(X_holdout_nb)
+xgb_predictions_proba = xgb_model.predict_proba(X_holdout_xgb)
+lstm_predictions_proba = lstm_model.predict(X_holdout_lstm)
+
+# Stack the predictions to create the feature matrix for the meta-learner (blending)
+stacked_features = np.hstack((
+    lr_predictions_proba, svm_predictions_proba, nb_predictions_proba, xgb_predictions_proba, lstm_predictions_proba
+))
+
+# Train Random Forest as the meta-learner
+meta_learner_rf = RandomForestClassifier(
+    max_depth=None, min_samples_split=20, min_samples_leaf=1, max_features='sqrt', bootstrap=False, random_state=42
+)
+
+# Fit the meta-learner using the predictions from the base models (holdout set)
+meta_learner_rf.fit(stacked_features, y_holdout)
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Blending with Random Forest as Meta-Learner]
+    \begin{lstlisting}[language=Python]
+# Save the trained Random Forest meta-learner
+with open('meta_learner_rf_blending.pkl', 'wb') as file:
+    pickle.dump(meta_learner_rf, file)
+
+# Predict using the Random Forest meta-learner on the holdout set
+final_predictions_rf = meta_learner_rf.predict(stacked_features)
+
+# Evaluate the Random Forest blending model
+accuracy_rf = accuracy_score(y_holdout, final_predictions_rf)
+report_rf = classification_report(y_holdout, final_predictions_rf, target_names=label_encoder.classes_)
+
+print(f"Random Forest Meta-Learner Accuracy (Blending): {accuracy_rf * 100:.2f}%")
+print("Classification Report (Random Forest):\n", report_rf)
+print("Confusion Matrix (Random Forest):\n", confusion_matrix(y_holdout, final_predictions_rf))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code implements a blending approach to improve classification performance by combining the predictions of multiple base models through a Random Forest meta-learner. Initially, several machine learning models (Logistic Regression, SVM, Naive Bayes, XGBoost, and LSTM) are trained individually using the provided dataset. The dataset is split into training and holdout sets to facilitate the blending process. The models are then evaluated on the holdout set, and their prediction probabilities are obtained. These prediction probabilities from each model are stacked together to create a feature matrix, which is then used as input to a Random Forest classifier, acting as the meta-learner. The goal is to leverage the diversity in predictions from the base models to make more accurate final predictions. The Random Forest meta-learner is trained using this stacked feature matrix, and its performance is evaluated on the holdout set. The final output includes the accuracy, classification report, and confusion matrix of the Random Forest meta-learner, which represents the blended model's effectiveness. By blending the base models’ predictions, the Random Forest meta-learner aims to capture the strengths of each model and improve overall classification performance, reducing the likelihood of errors from any single model.
+
+\pagebreak
+\subsubsection{Ensemble Model 7 (Weighted Voting)}
+
+\textbf{Base Model : Logistic Regression, Naive Bayes, SVM, LSTM, XGBoost}
+
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Weighted Voting Ensemble for Classification]
+    \begin{lstlisting}[language=Python]
+import pickle
+import numpy as np
+import pandas as pd
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from tensorflow.keras.models import load_model
+from tensorflow.keras.utils import pad_sequences
+
+# Load models and vectorizers
+with open('LRmodel.pkl', 'rb') as file:
+    lr_model = pickle.load(file)
+with open('LRvectorizer.pkl', 'rb') as file:
+    lr_vectorizer = pickle.load(file)
+with open('SVMmodel.pkl', 'rb') as file:
+    svm_model = pickle.load(file)
+with open('SVMvectorizer.pkl', 'rb') as file:
+    svm_vectorizer = pickle.load(file)
+with open('xgb_model.pkl', 'rb') as file:
+    xgb_model = pickle.load(file)
+with open('tfidf_vectorizer.pkl', 'rb') as file:
+    tfidf_vectorizer = pickle.load(file)
+with open('label_encoder.pkl', 'rb') as file:
+    label_encoder = pickle.load(file)
+lstm_model = load_model('lstm_model.h5')
+with open('LSTM_tokenizer.pkl', 'rb') as file:
+    lstm_tokenizer = pickle.load(file)
+with open('NBmodel.pkl', 'rb') as file:
+    nb_model = pickle.load(file)
+with open('NBvectorizer.pkl', 'rb') as file:
+    nb_vectorizer = pickle.load(file)
+
+# Load the test dataset
+data = pd.read_csv('preprocessed_mental_health.csv')
+data.dropna(subset=['cleaned_text'], inplace=True)
+X_test = data['cleaned_text']
+y_test = data['mental_health_issue']
+y_test = label_encoder.transform(y_test)
+
+# Preprocess the text
+X_test_lr = lr_vectorizer.transform(X_test)
+X_test_svm = svm_vectorizer.transform(X_test)
+\end{lstlisting}
+\end{tcolorbox}
+\begin{tcolorbox}[colback=gray!5!white, colframe=gray!80!black, boxrule=0.5pt, title=Weighted Voting Ensemble for Classification]
+    \begin{lstlisting}[language=Python]
+X_test_nb = nb_vectorizer.transform(X_test)
+X_test_xgb = tfidf_vectorizer.transform(X_test)
+X_test_lstm = lstm_tokenizer.texts_to_sequences(X_test)
+X_test_lstm = pad_sequences(X_test_lstm, maxlen=100, padding='post', truncating='post')
+
+# Get individual model probabilities
+lr_predictions_proba = lr_model.predict_proba(X_test_lr)
+svm_predictions_proba = svm_model.predict_proba(X_test_svm)
+nb_predictions_proba = nb_model.predict_proba(X_test_nb)
+xgb_predictions_proba = xgb_model.predict_proba(X_test_xgb)
+lstm_predictions_proba = lstm_model.predict(X_test_lstm)
+
+# Define weights for models (based on prior performance or experimentation)
+weights = {
+    'lr': 0.25,  # Logistic Regression
+    'svm': 0.2,  # SVM
+    'nb': 0.15,  # Naive Bayes
+    'xgb': 0.25, # XGBoost
+    'lstm': 0.15 # LSTM
+}
+
+# Weighted sum of probabilities
+final_predictions_proba = (
+    weights['lr'] * lr_predictions_proba + weights['svm'] * svm_predictions_proba + weights['nb'] * nb_predictions_proba + weights['xgb'] * xgb_predictions_proba + weights['lstm'] * lstm_predictions_proba
+)
+
+# Final predictions based on maximum weighted probability
+final_predictions = np.argmax(final_predictions_proba, axis=1)
+
+# Evaluate weighted voting ensemble
+accuracy = accuracy_score(y_test, final_predictions)
+report = classification_report(y_test, final_predictions, target_names=label_encoder.classes_)
+
+print(f"Weighted Voting Ensemble Accuracy: {accuracy * 100:.2f}%")
+print("Classification Report (Weighted Voting):\n", report)
+print("Confusion Matrix:\n", confusion_matrix(y_test, final_predictions))
+    \end{lstlisting}
+\end{tcolorbox}
+
+\noindent
+This code demonstrates the use of a weighted voting ensemble to classify mental health issues based on text data. The main goal of this approach is to combine the outputs from multiple base models—Logistic Regression, SVM, Naive Bayes, XGBoost, and LSTM—into a single, stronger prediction. Each of these models provides predicted probabilities for each class, and these probabilities are then combined using a weighted sum. The weights are assigned based on the individual performance of each model, which can be adjusted based on prior experimentation or evaluation. The ensemble's final prediction is made by taking the class with the highest probability after the weighted sum. This is a form of soft voting where the model probabilities, rather than just the final class labels, are combined. This method allows for more flexibility and the potential for better overall performance compared to simply choosing the most frequent class among the base models (hard voting). The text input is preprocessed for each model using appropriate vectorizers or tokenizers. Logistic Regression, SVM, Naive Bayes, and XGBoost models use TF-IDF or other feature extraction techniques, while the LSTM model processes the text sequences directly. After obtaining predictions from all models, the weighted sum of their probabilities is computed. The final class predictions are derived by selecting the class with the highest weighted probability. The ensemble model’s performance is evaluated on the test set using accuracy, classification report, and confusion matrix. This method takes advantage of the strengths of each individual model while mitigating their weaknesses, aiming for better generalization and accuracy in classifying mental health issues from text.
+
+\vspace{1em}
+
+\noindent
+The ensemble model for web application consists of several base models, each utilizing different techniques for feature extraction and training. Logistic Regression is implemented using the Bag of Words model for vectorization. Naive Bayes is optimized through hyperparameter tuning with Random Search, also utilizing the Bag of Words model for feature extraction. The Long Short-Term Memory (LSTM) model processes the text sequences directly, while XGBoost uses the Term Frequency-Inverse Document Frequency (TF-IDF) method for feature extraction. Support Vector Machine (SVM) is implemented using the Bag of Words model as well. These base models are then combined through a Random Forest meta-learner, which serves as the final model for prediction, blending the outputs of the individual base models to produce a robust result.
 
 
 \pagebreak
