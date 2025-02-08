@@ -19,12 +19,12 @@
 \subsection{Project Overview}
 \vspace{.1in}
 \noindent
-Mental health has become a critical global issue, with millions of people affected by various mental disorders, including depression, anxiety, and others. With the increasing use of social media, these platforms have emerged as spaces where people often express their emotions and struggles, sometimes unknowingly revealing signs of mental health challenges. This project focuses on analyzing social media posts to detect mental health disorders using advanced machine learning techniques. By examining language patterns and contextual usage in text data, this project aims to classify posts that potentially indicate mental health issues. Such detection can facilitate early intervention and help direct individuals to appropriate mental health services.
+Mental health disorders, including depression and anxiety, affect millions globally. Social media has become a platform where individuals often express emotions and struggles, inadvertently revealing signs of mental health challenges. This project leverages machine learning to analyze social media posts, detecting mental health issues by examining language patterns and contextual cues. By classifying posts indicative of mental health concerns, the project aims to enable early intervention and guide individuals toward appropriate support services.
 
 \subsection{Project Purpose}
 \vspace{.1in}
 \noindent
-The main goal of this project is to leverage machine learning and deep learning to identify the best model and create a web application capable of identifying signs of mental health disorders from text, images and social media posts by giving username as input. This aligns with a broader goal of using technology to address public health concerns by enabling early detection through data analysis. Specifically, we use models such as Logistic Regression, Naive Bayes, SVM, XGboost, LSTM and Transformer to predict mental health issues based on text patterns. The project also addresses the technical challenges of processing large datasets and optimizing algorithms for accurate classification.
+This project aims to develop a web application using machine learning and deep learning models (Logistic Regression, Naive Bayes, SVM, XGBoost, LSTM, Transformer) to detect mental health disorders from text, images, videos, PDFs, User responses to image and social media profiles. By addressing technical challenges in processing large datasets and optimizing algorithms, the project seeks to enable early detection of mental health issues, contributing to public health improvement through technology.
 
 \subsection{Technical Domain Specifications}
 \vspace{.1in}
@@ -38,14 +38,7 @@ This project falls within the intersection of natural language processing (NLP) 
 
     \item \textbf{Operating System} : 
     \noindent
-    The project is cross-platform and can be developed and executed on any modern operating system, including:
-        \begin{itemize}
-            \item Windows 10/11
-            \item macOS
-            \item 
-            \noindent
-            Linux distributions (Ubuntu, Linux Mint, etc.) A Linux-based system is often preferred in machine learning projects due to its stability and support for tools like TensorFlow, PyTorch, and other libraries used for model training.
-        \end{itemize}
+    The project is cross-platform and can be developed and executed on any modern operating system, including macOS, Windows 10/11, Linux distributions (Ubuntu, Linux Mint). 
 
     \item  \textbf{Software} :
     \noindent
@@ -56,43 +49,13 @@ This project falls within the intersection of natural language processing (NLP) 
 
             \item \textbf{Libraries / Frameworks} :
             \noindent
-                \begin{itemize}
-                    
-                    \item \textbf{Scikit-learn} :
-                    \noindent
-                    Used for machine learning algorithms and model evaluation.
-
-                    \item \textbf{Pandas} :
-                    \noindent
-                    For data manipulation and preprocessing.
-
-                    \item \textbf{NumPy} :
-                    \noindent
-                    To handle large arrays and matrices, which are crucial for efficient numerical computations.
-
-                    \item \textbf{NLTK and spaCy} :
-                    \noindent
-                    For text preprocessing and natural language understanding.
-
-                    \item \textbf{Matplotlib and Seaborn} :
-                    \noindent
-                    For data visualization.
-                    
-                \end{itemize}
+            This project leverages a comprehensive suite of libraries and frameworks to enable its functionality, including data processing (Pandas, NumPy), machine learning (Scikit-learn, XGBoost, TensorFlow, Transformers), image and text analysis (OpenCV, Tesseract, Pytesseract, DeepFace), audio processing (Librosa, PyDub, SpeechRecognition), social media integration (PRAW, Tweepy), and visualization (Plotly, Matplotlib). Additional tools like Streamlit, NLTK, and Google Generative AI ensure seamless application development, multilingual support, and advanced model implementation.    
 
             \item \textbf{Development Environment} :
             \noindent
-                \begin{itemize}
-                    
-                    \item \textbf{Jupyter Notebook} :
-                    \noindent
-                    For interactive development, experimentation, and visualization.
-
-                    \item \textbf{Google Colab} :
-                    \noindent
-                    For cloud-based execution when working with larger datasets or GPU-based model training.
+            Google Colab is used for cloud-based execution when working with larger datasets or GPU-based model training.
                 
-                \end{itemize}
+
                 
         \end{itemize}
     
@@ -100,25 +63,24 @@ This project falls within the intersection of natural language processing (NLP) 
 
 \subsection{Business Domain Specifications}
 \noindent
-From a business perspective, this project holds significant value across various sectors, particularly those that intersect with mental health monitoring, public health awareness, and social media governance. With the increasing prevalence of mental health issues globally, organizations within these industries are searching for innovative solutions to mitigate the growing mental health crisis. Leveraging machine learning for early detection of mental health disorders from social media data can revolutionize how mental health is addressed at both individual and societal levels. Below is a detailed exploration of how this project can impact different business domains:
+From a business perspective, this project offers significant value in mental health monitoring, public health awareness, and social media governance. As mental health issues rise globally, organizations seek innovative solutions to address this crisis. By using machine learning to detect mental health disorders from social media data, this project can transform mental health management at both individual and societal levels, impacting various industries effectively.
 
 \begin{itemize}
     
     \item \textbf{Mental Health Services} :
     \noindent
-    Mental health service providers—such as hospitals, therapy centers, and private practices—can greatly benefit from machine learning models capable of identifying early signs of mental health issues from social media data. In the traditional mental health setting, early detection of disorders like depression or anxiety often relies on self-reporting or clinical assessments, which may come too late in the progression of the disorder. By analyzing patterns in social media posts, these services can adopt a more proactive approach, reaching out to potential patients earlier in their mental health journey.
+    Mental health providers, including hospitals and therapy centers, can leverage machine learning to detect early signs of mental disorders from social media data. This proactive approach complements traditional self-reporting and clinical assessments, enabling earlier intervention and support for patients.
 
     \item \textbf{Social Media Platforms} :
     \noindent
-    Social media platforms like Twitter, Facebook, Instagram, and others play an integral role in the public’s expression of thoughts and feelings, including mental health struggles. These platforms face increasing pressure to safeguard the well-being of their users. This project’s machine learning models can enable these companies to offer valuable services to users while adhering to ethical standards.
+    Social media platforms like Twitter and Reddit are key spaces for expressing thoughts and emotions, including mental health struggles. This project’s machine learning models can help these platforms safeguard user well-being by identifying concerns early, while maintaining ethical standards.
 
     \item \textbf{Public Health Organizations} :
     \noindent
-    Public health organizations are tasked with monitoring and improving the mental well-being of the population on a large scale. For these organizations, access to real-time data from social media can provide a comprehensive view of the mental health landscape, identifying emerging trends and enabling data-driven interventions. Understanding how mental health is being discussed online can help public health organizations create more effective mental health awareness campaigns. Tailored messaging based on the language patterns identified by the model can lead to better engagement with individuals suffering from mental health issues.
+    Public health organizations can use real-time social media data to monitor mental well-being, identify trends, and design data-driven interventions. By analyzing language patterns, they can create targeted awareness campaigns that better engage individuals facing mental health challenges.
     
 \end{itemize}
 
-\pagebreak
 
 \subsection{Glossary / Keywords}
 \noindent
@@ -157,19 +119,17 @@ From a business perspective, this project holds significant value across various
   Recall & In classification, recall measures the ability of a model to identify all relevant instances within a dataset, calculated as the ratio of true positives to the sum of true positives and false negatives. \\
   
   \hline
-  PRAW & PRAW (Python Reddit API Wrapper) is a Python library that provides a simple interface to interact with Reddit's API, allowing developers to easily access, retrieve, and analyze Reddit data, such as posts, comments, and user information. \\
+  PRAW & PRAW (Python Reddit API Wrapper) is a Python library that provides a simple interface to interact with Reddit's API for accessing Reddit data, such as posts, comments, and user information. \\
+  \hline
+\end{tabular}
+
+\begin{tabular}{|p{4cm}|p{10cm}|}
+    \hline
+    \multicolumn{1}{|c|}{\textbf{Term}} & \multicolumn{1}{c|}{\textbf{Definition}} \\
+  
 
   \hline
   TesseractOCR & TesseractOCR is an open-source Optical Character Recognition (OCR) engine that extracts text from images with high accuracy; it is widely used for various applications like scanning documents and digitalizing printed text. \\
-  \hline
-
-\end{tabular}
-
-\pagebreak
-
-\begin{tabular}{|p{4cm}|p{10cm}|}
-  \hline
-  \multicolumn{1}{|c|}{\textbf{Term}} & \multicolumn{1}{c|}{\textbf{Definition}} \\
 
   \hline
   Depression & There is a difference between depression and mood swings or short-lived emotional reactions to daily experiments; A mental state causing painful symptoms adversely disrupts normal activities (e.g., sleeping). \\
@@ -197,33 +157,8 @@ From a business perspective, this project holds significant value across various
 
   \hline
   Hyperparameter Tuning & Hyperparameter tuning involves selecting the best parameters for a machine learning model to optimize its performance on a given task, using methods like grid search or random search. \\
-
-  \hline
-  Logistic Regression & Logistic Regression is a statistical method used for binary and multiclass classification tasks by modeling the relationship between input variables and probabilities using a sigmoid function. \\
   \hline
 \end{tabular}
-
-\begin{tabular}{|p{4cm}|p{10cm}|}
-    \hline
-    \multicolumn{1}{|c|}{\textbf{Term}} & \multicolumn{1}{c|}{\textbf{Definition}} \\
-  \hline
-  K-Nearest Neighbors (KNN) & KNN is a simple, instance-based machine learning algorithm used for classification and regression tasks, predicting outcomes based on the majority class of its k nearest neighbors. \\
-
-  \hline
-  Naive Bayes & Naive Bayes is a probabilistic classification algorithm based on Bayes' Theorem, assuming independence between features, making it efficient for text classification and other applications. \\
-
-  \hline
-  Random Forest & Random Forest is an ensemble machine learning algorithm that combines multiple decision trees to improve accuracy and prevent overfitting, commonly used for classification and regression tasks. \\
-
-  \hline
-  XGBoost & XGBoost (Extreme Gradient Boosting) is a powerful ensemble machine learning algorithm based on decision trees, designed for speed and performance in classification and regression tasks. \\
-
-  \hline
-  Long Short-Term Memory (LSTM) & LSTM is a type of recurrent neural network (RNN) architecture capable of learning and remembering patterns over long sequences of data, widely used in time-series analysis and NLP. \\
-  \hline
-
-\end{tabular}
-
   
 \end{center}
 
