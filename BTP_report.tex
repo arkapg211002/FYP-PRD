@@ -35,6 +35,13 @@
 \usepackage{adjustbox} 
 \usepackage{url} % For \urldef
 
+\usepackage{rotating}      % For rotating tables
+\usepackage{lscape}        % Optional: for landscape 
+\usepackage{longtable}     % Optional: For tables that span pages
+
+\usepackage{hhline}
+\usepackage{boldline} % <- for bold border
+
 \definecolor{myblue}{RGB}{0, 0, 255}
 
 
@@ -127,24 +134,40 @@
  %\include{./FrontMatter/dedication}
  % \include{./FrontMatter/abstract}
 %
+% Set up fancy style first
+% Force fancy style globally
 \pagestyle{fancy}
 \fancyhead[C]{MAFSMBMDDPWI}
-\fancyfoot[L]{ \footnotesize TMSL / CSE / PRD8 / v2.5}
+\fancyfoot[L]{\footnotesize TMSL / CSE / PRD8 / v2.5}
+\fancyfoot[C]{\thepage}
+
+% Hack: redefine plain style so even if ToC sets it, it behaves like fancy
+\fancypagestyle{plain}{
+  \fancyhf{}  % clear all
+  \fancyhead[C]{MAFSMBMDDPWI}
+  \fancyfoot[L]{\footnotesize TMSL / CSE / PRD8 / v2.5}
+  \fancyfoot[C]{}  % Hides center page number
+}
+
+% Now, ToC page will auto-use this "fake plain"
 \vspace{-3\baselineskip}
 \begin{spacing}{0.9}
- { \tableofcontents 
-   \thispagestyle{fancy}}
-  %\addtocontents{toc}{~\vspace{-3\baselineskip}}
+  \tableofcontents
 \end{spacing}
+
+% After ToC, continue with real fancy style (with center page numbers)
+\clearpage
+\fancyfoot[C]{\thepage}  % Restore center page number for rest
 
 \vspace{2em}
 
-
-
 \pagebreak
  %Main material
- \clearpage
- \pagenumbering{arabic}
+\clearpage
+
+
+
+\pagenumbering{arabic}
 
  % \include{./Chapters/1_introduction} 
  % \include{./Chapters/2_problem_definition}  \include{./Chapters/3_related_studies}
